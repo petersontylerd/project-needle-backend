@@ -2,6 +2,18 @@
 
 FastAPI backend for the Quality Compass healthcare analytics dashboard.
 
+## Multi-Repository Ecosystem
+
+This repository is part of the Project Needle ecosystem:
+
+| Repository | Description | Tech Stack |
+|------------|-------------|------------|
+| [project-needle](https://github.com/petersontylerd/project-needle) | Analytics Engine | Python 3.14, uv |
+| **project-needle-backend** (this repo) | FastAPI backend + dbt | Python 3.12, PostgreSQL |
+| [project-needle-web](https://github.com/petersontylerd/project-needle-web) | Angular dashboard | Angular 21, Nx, pnpm |
+
+For complete multi-repo setup, see [project-needle/docs/repo-setup.md](https://github.com/petersontylerd/project-needle/blob/main/docs/repo-setup.md).
+
 ## Overview
 
 The backend provides REST APIs for:
@@ -12,14 +24,11 @@ The backend provides REST APIs for:
 - **Metrics** - Metric definitions and aggregations via semantic layer
 - **Metadata** - Semantic layer endpoints for dimensions and metrics
 - **Modeling** - ML model artifacts and predictions
-- **Ontology** - Domain taxonomy and classification endpoints
-- **Runs** - Insight graph run management
-- **Users** - User management and preferences
 
 ## Project Structure
 
 ```
-backend/
+project-needle-backend/
 ├── src/
 │   ├── main.py              # FastAPI application entry point
 │   ├── config.py            # Settings and environment configuration
@@ -34,16 +43,13 @@ backend/
 │   ├── activity/            # Activity feed with pagination
 │   ├── narratives/          # Narrative generation
 │   ├── metrics/             # Metrics endpoints
-│   ├── metadata/            # Semantic layer endpoints
-│   ├── modeling/            # ML data endpoints
-│   ├── ontology/            # Domain taxonomy
-│   ├── runs/                # Run management
-│   └── users/               # User management
-├── dbt/                     # dbt transformation layer (see dbt/README.md)
+│   └── metadata/            # Semantic layer endpoints
+├── dbt/                     # dbt transformation layer
 ├── alembic/                 # Database migrations
+├── taxonomy/                # Shared vocabularies (git submodule)
 ├── tests/                   # Backend test suite
 ├── scripts/                 # Data loading and utility scripts
-└── logs/                    # Application logs
+└── docker/                  # Docker configuration
 ```
 
 ## Quick Start
@@ -53,56 +59,90 @@ backend/
 - Python 3.12+
 - PostgreSQL 16+
 - uv package manager
+- Docker (for containerized setup)
 
-### Installation
+### Docker Setup (Recommended)
+
+The backend uses a shared Docker volume (`needle-artifacts`) to receive artifacts from the analytics engine.
 
 ```bash
-cd backend
-UV_CACHE_DIR=../.uv-cache uv sync --extra dev
+# One-time setup: create shared volume
+docker volume create needle-artifacts
+
+# Copy environment file
+cp .env.example .env
+
+# Build and start services
+docker compose build
+docker compose up -d
+
+# Run database migrations
+docker exec project-needle-backend-api alembic upgrade head
 ```
 
-### Environment Variables
+Services available at:
+- **API**: http://localhost:8000
+- **Swagger UI**: http://localhost:8000/docs
+- **PostgreSQL**: localhost:5433
 
-Create a `.env` file or set these environment variables:
-
-```bash
-# Database
-DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/quality_compass
-
-# CORS (comma-separated origins)
-CORS_ORIGINS=http://localhost:4200,http://localhost:4000
-
-# Application
-APP_TITLE="Quality Compass API"
-APP_VERSION="1.0.0"
-
-# Project Needle integration
-RUNS_ROOT=/path/to/runs
-```
-
-### Database Setup
+### Local Development
 
 ```bash
+# Install dependencies
+uv sync --extra dev
+
 # Run migrations
-cd backend
-UV_CACHE_DIR=../.uv-cache uv run alembic upgrade head
+uv run alembic upgrade head
 
-# Load initial data via dbt
-cd dbt
-UV_CACHE_DIR=../../.uv-cache uv run dbt run
+# Start development server
+uv run uvicorn src.main:app --reload --port 8000
 ```
 
-### Running the Server
+## Data Pipeline
+
+The backend consumes artifacts from the analytics engine (project-needle) via the shared Docker volume.
+
+### Pipeline Flow
+
+```
+project-needle (Analytics Engine)
+    │ writes artifacts to
+    ▼
+needle-artifacts (Docker Volume)
+    │ read by
+    ▼
+load_insight_graph_to_dbt.py → raw tables
+    │
+    ▼
+dbt run → staging → marts (fct_signals, dim_*)
+    │
+    ▼
+signals.cli hydrate → signals table
+    │
+    ▼
+FastAPI → REST API → Angular Frontend
+```
+
+### Loading Data
+
+After running insight-graph in project-needle:
 
 ```bash
-cd backend
-UV_CACHE_DIR=../.uv-cache uv run uvicorn src.main:app --reload --port 8000
-```
+# List available runs
+docker run --rm -v needle-artifacts:/data alpine ls /data/
 
-The API will be available at:
-- API: http://localhost:8000
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
+# Load artifacts into database
+docker exec project-needle-backend-api python /app/scripts/load_insight_graph_to_dbt.py \
+  --runs-root /data/runs \
+  --insight-graph-run test_minimal/<TIMESTAMP> \
+  --database-url "postgresql://postgres:postgres@db:5432/quality_compass"
+
+# Run dbt transformations
+docker exec project-needle-backend-api bash -c "cd /app/dbt && dbt deps && dbt run"
+
+# Hydrate signals table
+docker exec project-needle-backend-api python -m src.signals.cli hydrate
+```
 
 ## API Endpoints
 
@@ -144,87 +184,78 @@ The API will be available at:
 | `/api/metadata/dimensions` | GET | List available dimensions |
 | `/api/metadata/metrics` | GET | List available metrics |
 
-### Metrics (`/api/metrics`)
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/metrics/query` | POST | Query metrics via semantic layer |
-
 ## Development
 
 ### Running Tests
 
 ```bash
-cd backend
-UV_CACHE_DIR=../.uv-cache uv run pytest tests/ -v
-```
-
-### Running Specific Tests
-
-```bash
-# Single test file
-UV_CACHE_DIR=../.uv-cache uv run pytest tests/signals/test_router.py -v
-
-# Single test
-UV_CACHE_DIR=../.uv-cache uv run pytest tests/signals/test_router.py::test_list_signals -v
+uv run pytest tests/ -v
 ```
 
 ### Code Quality
 
 ```bash
 # Format
-UV_CACHE_DIR=../.uv-cache uv run ruff format src/ tests/
+uv run ruff format src/ tests/
 
 # Lint
-UV_CACHE_DIR=../.uv-cache uv run ruff check src/ tests/
+uv run ruff check src/ tests/
 
 # Type check
-UV_CACHE_DIR=../.uv-cache uv run mypy src/
+uv run mypy src/
 ```
 
 ### Creating Migrations
 
 ```bash
-cd backend
-UV_CACHE_DIR=../.uv-cache uv run alembic revision -m "description_of_change"
+uv run alembic revision -m "description_of_change"
 ```
 
-## Data Pipeline
+### Updating Taxonomy Submodule
 
-The backend relies on dbt for data transformation. See [dbt/README.md](dbt/README.md) for:
-- dbt model documentation
-- Data loading procedures
-- Semantic layer configuration
+The taxonomy is shared with project-needle via git submodule:
 
-### Data Flow
-
-```
-Project Needle Run Output (JSONL)
-    ↓ Python ETL (scripts/load_insight_graph_to_dbt.py)
-Raw Tables (raw_node_results, raw_contributions)
-    ↓ dbt run
-Staging → Intermediate → Marts (fct_signals, dim_*)
-    ↓ FastAPI
-REST API → Angular Frontend
+```bash
+git submodule update --remote taxonomy
+git add taxonomy
+git commit -m "chore: update taxonomy submodule"
 ```
 
-## Architecture Notes
+## Environment Variables
 
-### Signal Hydration
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DATABASE_URL` | - | PostgreSQL connection string |
+| `RUNS_ROOT` | `/data/runs` | Path to insight-graph artifacts |
+| `CORS_ORIGINS` | `http://localhost:4200` | Allowed CORS origins |
+| `DEBUG` | `false` | Enable debug mode |
+| `TAXONOMY_PATH` | `/app/taxonomy` | Path to taxonomy files |
 
-On startup, the backend checks if the signals table is empty. If so, it hydrates signals from Project Needle node result files using `SignalHydrator`. This is a one-time operation; subsequent runs skip hydration.
+## Docker Compose Reference
 
-### CORS Configuration
+```yaml
+services:
+  db:
+    image: quality-compass-db:dev
+    ports:
+      - "5433:5432"
 
-CORS is configured to allow the Angular frontend to access the API. Origins are specified via the `CORS_ORIGINS` environment variable.
+  backend:
+    image: quality-compass-backend:dev
+    volumes:
+      - needle-artifacts:/data/runs:ro  # Shared volume (read-only)
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
 
-### Database Sessions
-
-The backend uses async SQLAlchemy with asyncpg for PostgreSQL. Sessions are managed via dependency injection.
+volumes:
+  needle-artifacts:
+    external: true
+```
 
 ## Related Documentation
 
-- [dbt Project](dbt/README.md) - Data transformation layer
-- [Docker Setup](../docs/docker-setup.md) - Container deployment
-- [API Reference](../docs/api-reference.md) - Detailed API documentation
-- [E2E Testing](../docs/e2e.md) - End-to-end test documentation
+- [Multi-Repo Setup Guide](https://github.com/petersontylerd/project-needle/blob/main/docs/repo-setup.md)
+- [API Reference](https://github.com/petersontylerd/project-needle/blob/main/docs/api-reference.md)
+- [dbt Models](dbt/README.md)
