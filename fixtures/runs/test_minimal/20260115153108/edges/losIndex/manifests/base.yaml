@@ -1,0 +1,13 @@
+# ABOUTME: Auto-generated manifest of edges grouped by source group_by_set.
+# ABOUTME: Regenerated via insight-graph scaffold apply.
+facility_base:
+  edges:
+  - losIndex__medicareId__aggregate_time_period__to__losIndex__medicareId__dischargeMonth
+  - losIndex__medicareId__aggregate_time_period__to__losIndex__medicareId_dischargeStatus__aggregate_time_period
+  - losIndex__medicareId__aggregate_time_period__to__losIndex__medicareId_vizientServiceLine__aggregate_time_period
+facility_discharge_status:
+  edges:
+  - losIndex__medicareId_dischargeStatus__aggregate_time_period__to__losIndex__medicareId_dischargeStatus__dischargeMonth
+facility_service_line:
+  edges:
+  - losIndex__medicareId_vizientServiceLine__aggregate_time_period__to__losIndex__medicareId_vizientServiceLine__dischargeMonth

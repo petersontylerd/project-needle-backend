@@ -1,0 +1,11 @@
+facility_id,facility_name,facility_type,health_system,region,state,bed_count
+AFP658,Sample Hospital A,Academic Medical Center,Sample Health System,Northeast,NY,500
+010001,Community Hospital B,Community Hospital,Regional Healthcare,Southeast,GA,150
+020002,Medical Center C,Academic Medical Center,University Health,Midwest,IL,750
+030003,Rural Hospital D,Critical Access Hospital,Rural Health Network,West,MT,25
+040004,Specialty Center E,Specialty Hospital,Specialty Care Group,Southwest,TX,100
+050005,Regional Medical F,Regional Medical Center,Regional Healthcare,Northeast,PA,350
+060006,Children's Hospital G,Children's Hospital,Children's Health,Southeast,FL,200
+070007,Veterans Hospital H,Government Hospital,VA Health System,Midwest,OH,400
+080008,Rehabilitation Center I,Rehabilitation Hospital,Rehab Services Inc,West,CA,75
+090009,Psychiatric Hospital J,Psychiatric Hospital,Mental Health Partners,Northeast,MA,120

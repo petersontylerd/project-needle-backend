@@ -1,0 +1,8 @@
+{
+  "run_id": "20260115200719",
+  "graph_name": "test_minimal",
+  "requirements_path": "/app/fixtures/requirements/test_minimal.md",
+  "taxonomy_hash": "cc86d2cfba895105",
+  "generated_at": "2026-01-16T02:44:31.791296+00:00",
+  "metadata_bundle_version": "1.0.0"
+}

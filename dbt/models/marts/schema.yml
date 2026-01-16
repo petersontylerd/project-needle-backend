@@ -1,0 +1,509 @@
+# Quality Compass Mart Models Schema
+# Documentation: https://docs.getdbt.com/docs/build/models
+#
+# Mart models provide business-ready, denormalized tables for API consumption.
+# They join staging tables, apply business logic, and add semantic descriptions.
+
+version: 2
+
+models:
+  # ============================================
+  # Dimension Models
+  # ============================================
+
+  - name: dim_facilities
+    description: >
+      Dimension table of unique facilities (Sites of Care).
+      One row per facility_id with aggregated attributes.
+      Enriched with reference data from ref_facilities seed when available.
+      Join on facility_sk or facility_id.
+    columns:
+      - name: facility_sk
+        description: Surrogate key for facility dimension
+        data_tests:
+          - unique
+          - not_null
+      - name: facility_id
+        description: Natural key (Medicare ID or facility code)
+        data_tests:
+          - unique
+          - not_null
+      - name: facility_name
+        description: >
+          Human-readable facility name from ref_facilities seed.
+          Falls back to facility_id if no reference data exists.
+      - name: facility_type
+        description: >
+          Classification of facility type from reference data.
+          Values: Academic Medical Center, Community Hospital, etc.
+      - name: health_system
+        description: Parent health system or organization
+      - name: region
+        description: Geographic region (Northeast, Southeast, Midwest, Southwest, West)
+      - name: state
+        description: Two-letter US state code
+      - name: bed_count
+        description: Licensed bed count for size classification
+      - name: primary_service_line
+        description: Most common service line for this facility (from entity results)
+      - name: total_encounters
+        description: Maximum encounters observed across all entity results
+      - name: first_seen_at
+        description: Earliest loaded_at timestamp for this facility
+      - name: last_seen_at
+        description: Latest loaded_at timestamp for this facility
+      - name: dbt_updated_at
+        description: Timestamp when this dbt model was last updated
+
+  - name: dim_metrics
+    description: >
+      Dimension table of unique metrics with semantic descriptions.
+      Provides plain-language context for metric identifiers.
+      Join on metric_sk or metric_id.
+    columns:
+      - name: metric_sk
+        description: Surrogate key for metric dimension
+        data_tests:
+          - unique
+          - not_null
+      - name: metric_id
+        description: Natural key (e.g., 'losIndex', 'readmissionRate')
+        data_tests:
+          - unique
+          - not_null
+      - name: metric_name
+        description: Human-readable metric name derived from metric_id
+      - name: description
+        description: Plain-language description explaining what the metric measures
+      - name: domain
+        description: Quality domain (Efficiency, Safety, Effectiveness, Utilization, Other)
+        data_tests:
+          - accepted_values:
+              values: ['Efficiency', 'Safety', 'Effectiveness', 'Utilization', 'Other']
+      - name: direction_preference
+        description: Whether lower or higher values are better (or neutral)
+        data_tests:
+          - accepted_values:
+              values: ['lower_is_better', 'higher_is_better', 'context_dependent', 'neutral']
+      - name: unit_type
+        description: Type of measurement unit (index, percentage, currency, days, count, numeric)
+      - name: dbt_updated_at
+        description: Timestamp when this dbt model was last updated
+
+  # ============================================
+  # Fact Models
+  # ============================================
+
+  - name: fct_signals
+    description: >
+      Fact table for quality signals ready for API consumption.
+      Grain: One row per entity (facility + metric + entity dimensions combination).
+      Aggregates all statistical method results into a JSONB array, with primary
+      statistics (simple_zscore, robust_zscore) extracted for querying.
+      Signals are filtered by non-null simplified_signal_type.
+    # NOTE: Grain verification via signal_id uniqueness test below.
+    # signal_id is generated from (run_id, canonical_node_id, entity_result_id),
+    # ensuring entity-level grain. entity_dimensions_hash is NOT unique per entity
+    # because it excludes facility_id (which is a separate column).
+    data_tests: []
+    columns:
+      - name: signal_id
+        description: Surrogate primary key
+        data_tests:
+          - unique
+          - not_null
+      - name: run_id
+        description: Analysis run identifier
+        data_tests:
+          - not_null
+      - name: canonical_node_id
+        description: Reference to source node in insight graph
+        data_tests:
+          - not_null
+      - name: temporal_node_id
+        description: Reference to temporal node via trends_to edge (nullable)
+      - name: facility_id
+        description: Facility Medicare ID
+      - name: service_line
+        description: Primary service line (e.g., 'Cardiovascular')
+      - name: sub_service_line
+        description: Sub-service line if present
+      - name: metric_id
+        description: Metric identifier (e.g., 'losIndex')
+        data_tests:
+          - not_null
+      - name: metric_value
+        description: Current metric value for this entity
+      - name: benchmark_value
+        description: Peer cohort benchmark value (peer_mean)
+      - name: variance_percent
+        description: Percentage variance from benchmark
+      - name: statistical_methods
+        description: >
+          JSONB array containing all statistical method results for this entity,
+          including z-scores, anomaly labels, and suppression status.
+          Format: [{"method": "simple_zscore", "z_score": 1.5, "anomaly_label": "slightly_high", ...}, ...]
+      - name: simple_zscore
+        description: Simple z-score from primary statistical method (statistical distance from peer mean)
+      - name: robust_zscore
+        description: Robust z-score using MAD scaling
+      - name: latest_simple_zscore
+        description: Most recent simple z-score value for temporal nodes
+      - name: mean_simple_zscore
+        description: Mean simple z-score over time window for temporal nodes
+      - name: latest_robust_zscore
+        description: Most recent robust z-score value for temporal nodes
+      - name: mean_robust_zscore
+        description: Mean robust z-score over time window for temporal nodes
+      - name: percentile_rank
+        description: Position in peer distribution (0-100)
+      - name: peer_std
+        description: Peer group standard deviation
+      - name: peer_count
+        description: Number of peers in comparison group
+      - name: encounters
+        description: Number of patient encounters
+      - name: global_metric_mean
+        description: Global mean of the metric across all entities
+      - name: global_metric_std
+        description: Global standard deviation of the metric across all entities
+      - name: description
+        description: Human-readable interpretation of the anomaly
+      - name: domain
+        description: Quality domain classification
+        data_tests:
+          - accepted_values:
+              values: ['Efficiency', 'Safety', 'Effectiveness', 'Utilization', 'Other']
+      - name: facility_sk
+        description: Foreign key to dim_facilities
+        data_tests:
+          - relationships:
+              to: ref('dim_facilities')
+              field: facility_sk
+              severity: warn
+      - name: metric_sk
+        description: Foreign key to dim_metrics
+        data_tests:
+          - relationships:
+              to: ref('dim_metrics')
+              field: metric_sk
+              severity: warn
+
+      # ---- NEW: Entity Grouping (4 fields) ----
+      - name: entity_dimensions
+        description: >
+          JSONB object containing non-facility entity dimensions.
+          Format: {"vizientServiceLine": "Cardiology", "admissionSource": "Emergency"}.
+          Business meaning: Defines the granularity of the signal beyond facility.
+      - name: entity_dimensions_hash
+        description: >
+          MD5 hash of entity_dimensions for efficient joins and deduplication.
+          Business meaning: Enables fast lookups by entity dimension combination.
+      - name: groupby_label
+        description: >
+          Human-readable label describing the groupby dimensions.
+          Examples: "Facility-wide", "Service Line", "Service Line / Sub-Service Line".
+          Business meaning: Displayed in UI to explain signal granularity.
+      - name: group_value
+        description: >
+          Concatenated values of the groupby dimensions.
+          Examples: "Facility-wide", "Cardiology", "Cardiology / Heart Failure".
+          Business meaning: Displayed in UI as the specific group value.
+
+      # ---- NEW: Temporal/Slope Statistics (8 fields) ----
+      - name: metric_trend_timeline
+        description: >
+          JSONB array of monthly metric values and z-scores.
+          Format: [{"period": "2024-01", "value": 1.23, "z_score": 0.5}, ...].
+          Business meaning: Enables trend visualization and time-series analysis.
+      - name: monthly_z_scores
+        description: >
+          JSONB array of monthly z-score values extracted from timeline.
+          Business meaning: Supports classification logic requiring temporal z-score patterns.
+      - name: slope
+        description: >
+          Linear regression slope of metric values over time.
+          Unit: Metric units per month. Positive = increasing, Negative = decreasing.
+          Business meaning: Rate of change in performance.
+      - name: slope_percentile
+        description: >
+          Percentile rank of slope among peers.
+          Unit: Percentage (0-100). Higher = faster increase.
+          Business meaning: How the rate of change compares to peers.
+      - name: acceleration
+        description: >
+          Second derivative - rate of change in slope.
+          Positive = trend accelerating, Negative = trend decelerating.
+          Business meaning: Identifies whether trends are accelerating or slowing.
+      - name: trend_direction
+        description: >
+          Categorical trend direction.
+          Values: 'increasing', 'decreasing', 'stable'.
+          Business meaning: Simple trend indicator for filtering.
+      - name: momentum
+        description: >
+          Momentum indicator combining slope and acceleration.
+          Values: 'accelerating_up', 'accelerating_down', 'decelerating', 'stable'.
+          Business meaning: Identifies signals requiring urgent attention due to momentum.
+      - name: peer_percentile_trends
+        description: >
+          Peer distribution percentile trends from temporal node.
+          JSONB containing periods, p10/p25/p50/p75/p90 arrays, sample_sizes,
+          and suppression_applied flags.
+          Business meaning: Enables reference band visualization showing peer distribution over time.
+
+      # ---- NEW: Anomaly Labels (7 fields) ----
+      - name: simple_zscore_anomaly
+        description: >
+          Anomaly classification for simple z-score statistic.
+          Values: 9-tier classification (extremely_low to extremely_high) or no_score.
+          Business meaning: Anomaly label for the primary statistical measure.
+      - name: robust_zscore_anomaly
+        description: >
+          Anomaly classification for robust z-score statistic.
+          Business meaning: Outlier-resistant anomaly classification.
+      - name: latest_simple_zscore_anomaly
+        description: >
+          Anomaly classification for most recent simple z-score (temporal nodes).
+          Business meaning: Current period performance anomaly.
+      - name: mean_simple_zscore_anomaly
+        description: >
+          Anomaly classification for mean simple z-score over time (temporal nodes).
+          Business meaning: Average performance anomaly over time window.
+      - name: latest_robust_zscore_anomaly
+        description: >
+          Anomaly classification for most recent robust z-score (temporal nodes).
+          Business meaning: Current period outlier-resistant anomaly.
+      - name: mean_robust_zscore_anomaly
+        description: >
+          Anomaly classification for mean robust z-score over time (temporal nodes).
+          Business meaning: Average outlier-resistant anomaly over time window.
+      - name: slope_anomaly
+        description: >
+          Anomaly classification for slope percentile.
+          Business meaning: Whether the rate of change is anomalous.
+
+      # ---- 9 Signal Type Classification (11 fields) ----
+      - name: simplified_signal_type
+        description: >
+          One of 9 signal types from the simplified classification system.
+          Values: suspect_data, sustained_excellence, improving_leader, baseline,
+                  emerging_risk, volatility_alert, recovering, chronic_underperformer, critical_trajectory.
+          Business meaning: High-level signal categorization for triage prioritization.
+      - name: simplified_severity
+        description: >
+          Severity score within the signal type's range (0-100).
+          Higher values indicate more urgent attention needed.
+          Business meaning: Enables prioritized signal triage within each type.
+      - name: simplified_severity_range
+        description: >
+          JSONB array with [min, max] severity bounds for this signal type.
+          Format: [0, 30] for baseline, [70, 100] for critical_trajectory.
+          Business meaning: Context for interpreting the severity score.
+      - name: simplified_inputs
+        description: >
+          JSONB object with 5 classification input values.
+          Format: {"aggregate_zscore": 1.5, "slope_percentile": 85.0, "acceleration": 0.1,
+                   "zscore_std": 0.3, "max_abs_deviation": 2.1}.
+          Business meaning: Raw inputs used to determine signal type.
+      - name: simplified_indicators
+        description: >
+          JSONB object with categorical interpretations of inputs.
+          Format: {"magnitude_level": "high", "trajectory_direction": "worsening",
+                   "consistency_pattern": "persistent"}.
+          Business meaning: Human-readable interpretation of classification inputs.
+      - name: simplified_reasoning
+        description: >
+          Human-readable explanation of why this signal type was assigned.
+          Business meaning: Glass-box explainability for clinical review.
+      - name: simplified_severity_calculation
+        description: >
+          JSONB object with full breakdown of severity score calculation.
+          Format: {"base_severity": 75, "refinements": [...], "final_severity": 82}.
+          Business meaning: Detailed explanation of severity derivation.
+      - name: magnitude_tier
+        description: >
+          Magnitude dimension tier from 3D classification matrix (technical display).
+          Values: critical, high, moderate, low, minimal.
+          Business meaning: Severity of the current deviation from expected.
+      - name: trajectory_tier
+        description: >
+          Trajectory dimension tier from 3D classification matrix (technical display).
+          Values: rapid_deterioration, gradual_deterioration, stable, gradual_improvement, rapid_improvement.
+          Business meaning: Direction and speed of change over time.
+      - name: consistency_tier
+        description: >
+          Consistency dimension tier from 3D classification matrix (technical display).
+          Values: persistent, intermittent, sporadic.
+          Business meaning: Stability of the anomaly pattern over time.
+      - name: coefficient_of_variation
+        description: >
+          Coefficient of variation (CV) of z-scores over time.
+          Lower values indicate more consistent anomaly patterns.
+          Business meaning: Measures volatility of the performance metric.
+
+      - name: detected_at
+        description: When the anomaly was detected
+      - name: dbt_updated_at
+        description: Timestamp when this dbt model was last updated
+
+  - name: fct_contributions
+    description: >
+      Fact table for contribution analysis.
+      Shows how child entities contribute to parent aggregate values.
+      One row per parent-child contribution relationship.
+    columns:
+      - name: contribution_id
+        description: Surrogate primary key
+        data_tests:
+          - unique
+          - not_null
+      - name: run_id
+        description: Analysis run identifier
+        data_tests:
+          - not_null
+      - name: record_timestamp
+        description: Original record timestamp from source
+      - name: parent_node_id
+        description: Parent node in the hierarchy
+        data_tests:
+          - not_null
+      - name: child_node_id
+        description: Child node contributing to parent
+        data_tests:
+          - not_null
+      - name: parent_facility_id
+        description: Parent entity facility ID
+      - name: parent_service_line
+        description: Parent entity service line
+      - name: child_facility_id
+        description: Child entity facility ID
+      - name: child_service_line
+        description: Child entity service line
+      - name: child_sub_service_line
+        description: Child entity sub-service line
+      - name: child_admission_status
+        description: >
+          Child entity admission status (e.g., 'Elective', 'Emergency', 'Urgent').
+          Business meaning: Admission type classification for drill-down by patient acuity.
+      - name: child_discharge_status
+        description: >
+          Child entity discharge status (e.g., 'Home Health Care', 'Skilled Nursing Facility').
+          Business meaning: Discharge destination for post-acute care analysis.
+      - name: child_payer_segment
+        description: >
+          Child entity payer segment (e.g., 'Medicare', 'Medicaid', 'Commercial').
+          Business meaning: Payer mix classification for financial impact analysis.
+      - name: child_admission_source
+        description: >
+          Child entity admission source (e.g., 'Physician Referral', 'Transfer from Hospital').
+          Business meaning: Patient origin classification for care coordination analysis.
+      - name: metric_id
+        description: Metric being analyzed
+        data_tests:
+          - not_null
+      - name: contribution_method
+        description: Decomposition method (e.g., 'weighted_mean')
+      - name: child_value
+        description: Child entity's metric value
+      - name: parent_value
+        description: Parent entity's metric value
+      - name: weight_field
+        description: Field used for weighting (e.g., 'encounters')
+      - name: weight_value
+        description: Absolute weight value
+      - name: weight_share
+        description: Proportion of total weight (0.0 to 1.0)
+        data_tests:
+          - not_null
+      - name: excess_over_parent
+        description: How much child deviates from parent (child - parent effect)
+      - name: contribution_weight
+        description: Impact score = |excess_over_parent| × weight_share
+        data_tests:
+          - not_null
+      - name: contribution_direction
+        description: Direction of impact (positive, negative, neutral)
+        data_tests:
+          - accepted_values:
+              values: ['positive', 'negative', 'neutral']
+      - name: contribution_rank
+        description: Rank by contribution_weight within parent context (1 = highest impact)
+      - name: total_weight_share
+        description: Sum of weight_share for parent (should be ~1.0)
+      - name: weight_share_valid
+        description: Boolean flag if total_weight_share is within 1% of 1.0
+      - name: contribution_pct
+        description: Percentage contribution to parent
+      - name: parent_facility_sk
+        description: Foreign key to dim_facilities for parent
+        data_tests:
+          - relationships:
+              to: ref('dim_facilities')
+              field: facility_sk
+              severity: warn
+      - name: child_facility_sk
+        description: Foreign key to dim_facilities for child
+        data_tests:
+          - relationships:
+              to: ref('dim_facilities')
+              field: facility_sk
+              severity: warn
+      - name: metric_sk
+        description: Foreign key to dim_metrics
+        data_tests:
+          - relationships:
+              to: ref('dim_metrics')
+              field: metric_sk
+              severity: warn
+      - name: loaded_at
+        description: When source data was loaded
+      - name: dbt_updated_at
+        description: Timestamp when this dbt model was last updated
+
+  - name: fct_model_drivers
+    description: >
+      Fact table summarizing modeling experiments for API consumption.
+      Includes performance metrics and SHAP artifact paths for driver analysis.
+      Grain: One row per experiment per run and estimator.
+    columns:
+      - name: run_id
+        description: Modeling run identifier
+        data_tests:
+          - not_null
+      - name: estimator
+        description: Model estimator used for the experiment
+        data_tests:
+          - not_null
+      - name: groupby_label
+        description: Group-by label used for segmentation
+      - name: group_value
+        description: Specific group value used for segmentation
+      - name: row_count
+        description: Number of rows used for training/evaluation
+      - name: duration_seconds
+        description: Total experiment runtime in seconds
+      - name: mae
+        description: Mean absolute error on transformed scale
+      - name: rmse
+        description: Root mean squared error on transformed scale
+      - name: r2
+        description: R-squared on transformed scale
+      - name: mae_original
+        description: Mean absolute error on original scale
+      - name: rmse_original
+        description: Root mean squared error on original scale
+      - name: r2_original
+        description: R-squared on original scale
+      - name: global_shap_path
+        description: Path to global SHAP summary CSV
+      - name: facility_shap_path
+        description: Path to facility-level SHAP summary CSV
+      - name: encounter_shap_path
+        description: Path to encounter-level SHAP summary CSV
+      - name: experiment_rank
+        description: Rank of the experiment within run/estimator (1 = best by R2)
+        data_tests:
+          - not_null
+      - name: loaded_at
+        description: When source data was loaded

@@ -1,0 +1,135 @@
+# Quality Compass Intermediate Models Schema
+# Documentation: https://docs.getdbt.com/docs/build/models
+#
+# These models transform and aggregate staging data for use in mart models.
+
+version: 2
+
+models:
+  # ============================================
+  # Statistical Methods Aggregation
+  # ============================================
+
+  - name: int_statistical_methods_agg
+    description: >
+      Aggregates all statistical methods for each entity into a JSONB array.
+      Consolidates the 1:N relationship between entities and statistical methods
+      into a single row, enabling fct_signals to have entity-level grain.
+      Grain: One row per entity_result_id.
+    columns:
+      - name: entity_result_id
+        description: >
+          Foreign key to stg_entity_results. Unique identifier for this entity result.
+        data_tests:
+          - unique
+          - not_null
+      - name: statistical_methods
+        description: >
+          JSONB array containing all statistical methods for this entity.
+          Each element includes: method_id, method_name, z-scores, anomaly labels.
+      - name: primary_simple_zscore
+        description: >
+          Simple z-score from the simple_zscore method. Used for primary display.
+      - name: primary_robust_zscore
+        description: >
+          Robust z-score from the robust_zscore method. Less sensitive to outliers.
+      - name: any_suppressed
+        description: >
+          Boolean indicating if any statistical method was suppressed for this entity.
+          Suppression occurs when peer count is below minimum threshold.
+
+  # ============================================
+  # Temporal Entity Statistics
+  # ============================================
+
+  - name: int_temporal_entity_stats
+    description: >
+      Extracts temporal statistics from temporal nodes and keys them by their
+      corresponding aggregate node for downstream joining in fct_signals.
+      This model bridges the aggregate-temporal node relationship, enabling
+      signals (which are based on aggregate nodes) to include temporal data
+      (slope, trend direction, monthly z-scores) from their linked temporal nodes.
+      Grain: One row per entity per aggregate-temporal node pair per run.
+    columns:
+      - name: temporal_stats_id
+        description: >
+          Surrogate key for this temporal stats record.
+          Composed of: aggregate_node_id, run_id, facility_id, entity_dimensions_hash.
+        data_tests:
+          - unique
+          - not_null
+      - name: aggregate_node_id
+        description: >
+          Canonical ID of the aggregate node this temporal data enriches.
+          This is the node that signals are based on.
+        data_tests:
+          - not_null
+      - name: temporal_node_id
+        description: >
+          Canonical ID of the source temporal node containing the trend data.
+          Linked via 'trends_to' edge from the aggregate node.
+        data_tests:
+          - not_null
+      - name: run_id
+        description: >
+          Analysis run identifier. Links to a specific pipeline execution.
+        data_tests:
+          - not_null
+      - name: facility_id
+        description: >
+          Medicare provider ID (medicareId) for entity matching.
+      - name: entity_dimensions
+        description: >
+          JSONB containing entity grouping dimensions (e.g., vizientServiceLine).
+          Used for entity-level matching between aggregate and temporal nodes.
+      - name: entity_dimensions_hash
+        description: >
+          MD5 hash of entity_dimensions for efficient joining.
+          Matches entity_key_hash in fct_signals.
+      - name: temporal_latest_simple_zscore
+        description: >
+          Latest period's simple z-score from temporal trending analysis.
+          Indicates the most recent performance relative to peers.
+      - name: temporal_mean_simple_zscore
+        description: >
+          Mean simple z-score across all time periods.
+          Indicates average performance over the analysis window.
+      - name: temporal_latest_robust_zscore
+        description: >
+          Latest period's robust z-score (outlier-resistant).
+      - name: temporal_mean_robust_zscore
+        description: >
+          Mean robust z-score across all time periods.
+      - name: temporal_slope
+        description: >
+          Rate of change of the metric over time. Positive = increasing, negative = decreasing.
+          Unit: Metric units per time period.
+      - name: temporal_slope_percentile
+        description: >
+          Percentile rank of this entity's slope among peers.
+          Range: 0-100. Higher = faster change relative to peers.
+      - name: temporal_acceleration
+        description: >
+          Rate of change of the slope (second derivative).
+          Positive = trend is accelerating, negative = decelerating.
+      - name: temporal_trend_direction
+        description: >
+          Qualitative direction of trend: 'increasing', 'decreasing', or 'stable'.
+      - name: temporal_momentum
+        description: >
+          Momentum indicator: 'accelerating', 'decelerating', 'steady', or 'gaining'.
+          Derived from slope and acceleration.
+      - name: temporal_monthly_z_scores
+        description: >
+          JSONB array of per-period z-scores for consistency tier calculation.
+          Used to compute standard deviation for the 3D classification matrix.
+
+  # ============================================
+  # Anomaly Labels
+  # ============================================
+
+  - name: int_anomaly_labels
+    description: >
+      Pivots anomaly labels from the anomalies array in statistical methods.
+      Provides one column per anomaly type for easier querying and filtering.
+      Grain: One row per statistical_method_id.

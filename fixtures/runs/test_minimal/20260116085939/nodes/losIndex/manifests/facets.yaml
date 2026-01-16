@@ -1,0 +1,29 @@
+# ABOUTME: Auto-generated facet manifest aligning runtime templates with requirements.
+# ABOUTME: Regenerated via insight-graph scaffold apply.
+families:
+- family_id: '`losIndex__medicareId_dischargeStatus`'
+  facet_type: dischargeStatus
+  facet_dimensions:
+  - dischargeStatus
+  group_by_set: facility_discharge_status
+  materialization: runtime
+  nodes:
+    aggregate: []
+    trend: []
+- family_id: '`losIndex__medicareId_vizientServiceLine`'
+  facet_type: vizientServiceLine
+  facet_dimensions:
+  - vizientServiceLine
+  group_by_set: facility_service_line
+  materialization: runtime
+  nodes:
+    aggregate: []
+    trend: []
+- family_id: '`losIndex__medicareId`'
+  facet_type: facility_base
+  facet_dimensions: []
+  group_by_set: facility_base
+  materialization: runtime
+  nodes:
+    aggregate: []
+    trend: []

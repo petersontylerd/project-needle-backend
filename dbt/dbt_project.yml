@@ -1,0 +1,61 @@
+# Quality Compass dbt Project
+# Documentation: https://docs.getdbt.com/reference/dbt_project.yml
+
+name: 'quality_compass'
+version: '1.0.0'
+config-version: 2
+
+# This setting configures which "profile" dbt uses for this project.
+profile: 'quality_compass'
+
+# These configurations specify where dbt should look for different types of files.
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# Model-level configurations
+models:
+  quality_compass:
+    # Staging models - materialized as tables for performance
+    # (avoids cascading JSON parsing when views reference other views)
+    staging:
+      +materialized: table
+      +schema: staging
+      +tags: ['staging']
+    # Intermediate models - aggregations and joins
+    intermediate:
+      +materialized: table
+      +schema: intermediate
+      +tags: ['intermediate']
+    # Marts - aggregate/presentation layer
+    marts:
+      +materialized: table
+      +schema: marts
+      +tags: ['marts']
+      # Run ANALYZE after table materialization for optimal query plans
+      +post-hook:
+        - "{{ analyze_table() }}"
+    # Semantic layer - metric and entity definitions
+    semantic:
+      +tags: ['semantic']
+
+# Snapshot configurations
+snapshots:
+  quality_compass:
+    +target_schema: snapshots
+    +strategy: check
+    +invalidate_hard_deletes: true
+
+# Variable definitions
+vars:
+  # Default run_id for testing; override in production
+  run_id: '20251210170210'
+  # Minimum encounters threshold for statistical significance
+  min_encounters: 30

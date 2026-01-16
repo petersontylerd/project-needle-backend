@@ -1,0 +1,9 @@
+metric_id,metric_name,description,domain,direction_preference,unit_type,display_format
+icuCasesFromIcuFile,ICU Cases (ICU Extract),Total number of ICU encounters recorded in the governed ICU data extract. Volume measure for intensive care utilization.,Utilization,neutral,count,"{:,d}"
+losIndex,Length of Stay Index,"Ratio of observed to expected length of stay, adjusted for case mix. Values >1.0 indicate longer stays than expected; <1.0 indicates shorter.",Efficiency,lower_is_better,ratio,{:.2f}
+losMeanExpectedDays,Mean Expected LOS (Days),"Risk-adjusted expected length of stay in days, based on case mix and severity. Used as the benchmark for LOS Index calculation.",Efficiency,neutral,days,{:.1f}
+losMeanObservedDays,Mean Observed LOS (Days),Average observed length of stay in days across all discharges in the cohort. Raw measure of hospitalization duration.,Efficiency,lower_is_better,days,{:.1f}
+losVarianceDays,LOS Variance (Days),Variance of inpatient length of stay measured in days for the entity cohort. Represents the spread of LOS around the mean.,Efficiency,lower_is_better,days,{:.1f}
+meanIcuDaysIcuFile,Mean ICU Days (ICU Extract),"Average number of days patients spend in the ICU, sourced from the governed ICU extract. Reflects ICU length of stay intensity.",Efficiency,lower_is_better,days,{:.1f}
+pctAllReturnsToIcu,ICU Return Rate (All Returns),Percentage of patients who return to the ICU during the same hospitalization. Indicator of care quality and patient stability after ICU discharge.,Safety,lower_is_better,percentage,{:.1f}%
+pctIcuEncountersIcuFile,ICU Encounter Percentage,"Percentage of total encounters that include an ICU stay, per the governed ICU extract. Reflects case mix intensity and acuity distribution.",Utilization,neutral,percentage,{:.1f}%

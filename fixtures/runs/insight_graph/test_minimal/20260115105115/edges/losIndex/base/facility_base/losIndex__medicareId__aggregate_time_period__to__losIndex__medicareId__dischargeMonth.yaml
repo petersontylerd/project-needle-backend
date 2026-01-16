@@ -1,0 +1,13 @@
+# ABOUTME: Auto-generated edge definition via insight-graph scaffold.
+# ABOUTME: Relationship from losIndex__medicareId__aggregate_time_period to losIndex__medicareId__dischargeMonth.
+schema_version: 0.1.0
+id: losIndex__medicareId__aggregate_time_period__to__losIndex__medicareId__dischargeMonth
+source: losIndex__medicareId__aggregate_time_period
+target: losIndex__medicareId__dischargeMonth
+type: trends_to
+direction: forward
+conditions:
+- field: medicareId
+  operator: equals
+  value: '{{medicareId}}'
+rationale: Annual to monthly LOS trend comparison

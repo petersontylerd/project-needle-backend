@@ -1,0 +1,14 @@
+# ABOUTME: Auto-generated manifest of nodes grouped by group_by_set.
+# ABOUTME: Regenerated via insight-graph scaffold apply.
+facility_base:
+  nodes:
+  - losIndex__medicareId__aggregate_time_period
+  - losIndex__medicareId__dischargeMonth
+facility_discharge_status:
+  nodes:
+  - losIndex__medicareId_dischargeStatus__aggregate_time_period
+  - losIndex__medicareId_dischargeStatus__dischargeMonth
+facility_service_line:
+  nodes:
+  - losIndex__medicareId_vizientServiceLine__aggregate_time_period
+  - losIndex__medicareId_vizientServiceLine__dischargeMonth

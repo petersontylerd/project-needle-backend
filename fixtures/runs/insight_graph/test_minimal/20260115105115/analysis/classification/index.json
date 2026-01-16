@@ -1,0 +1,1 @@
+{"run_id":"20260115105115","classification_version":"simplified_v1","total_entities":6207,"signal_type_distribution":{"improving_leader":1514,"emerging_risk":1514,"baseline":2613,"suspect_data":565,"chronic_underperformer":1},"severity_stats":{"min":15,"max":88,"mean":42.74818753020783},"generated_at":"2026-01-15T16:56:00.257888+00:00"}

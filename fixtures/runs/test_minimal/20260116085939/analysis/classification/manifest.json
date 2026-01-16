@@ -1,0 +1,15 @@
+{
+  "run_id": "20260116085939",
+  "generated_at": "2026-01-16T15:06:46.823025+00:00Z",
+  "run_dir": "/home/ubuntu/repos/project-needle/fixtures/runs/test_minimal/20260116085939",
+  "output_dir": "/home/ubuntu/repos/project-needle/fixtures/runs/test_minimal/20260116085939/analysis/classification",
+  "node_filter": null,
+  "total_entities": 6207,
+  "signal_type_distribution": {
+    "improving_leader": 1514,
+    "emerging_risk": 1514,
+    "baseline": 2613,
+    "suspect_data": 565,
+    "chronic_underperformer": 1
+  }
+}

@@ -1,0 +1,7 @@
+packages:
+  - package: dbt-labs/dbt_utils
+    version: ">=1.0.0"
+  # dbt-expectations provides advanced testing capabilities
+  # including range validation, pattern matching, and distribution tests
+  - package: metaplane/dbt_expectations
+    version: ">=0.10.0"

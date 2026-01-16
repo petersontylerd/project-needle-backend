@@ -1,0 +1,3 @@
+[submodule "taxonomy"]
+	path = taxonomy
+	url = https://github.com/petersontylerd/project-needle-taxonomy.git

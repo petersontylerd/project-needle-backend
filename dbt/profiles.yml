@@ -1,0 +1,58 @@
+# Quality Compass dbt Profiles
+# Documentation: https://docs.getdbt.com/docs/core/connect-data-platform/profiles.yml
+#
+# This file can be committed to version control because it uses environment variables
+# for sensitive credentials. Set these environment variables before running dbt:
+#
+#   export DBT_POSTGRES_HOST=localhost
+#   export DBT_POSTGRES_USER=postgres
+#   export DBT_POSTGRES_PASSWORD=postgres
+#   export DBT_POSTGRES_PORT=5432
+#   export DBT_POSTGRES_DATABASE=quality_compass
+#
+# Or use a .env file and source it before running dbt commands.
+
+quality_compass:
+  target: dev
+  outputs:
+    # Development environment (local PostgreSQL)
+    dev:
+      type: postgres
+      host: "{{ env_var('DBT_POSTGRES_HOST', 'localhost') }}"
+      user: "{{ env_var('DBT_POSTGRES_USER', 'postgres') }}"
+      password: "{{ env_var('DBT_POSTGRES_PASSWORD', 'postgres') }}"
+      port: "{{ env_var('DBT_POSTGRES_PORT', '5432') | int }}"
+      dbname: "{{ env_var('DBT_POSTGRES_DATABASE', 'quality_compass') }}"
+      schema: public
+      threads: 4
+      keepalives_idle: 0
+      connect_timeout: 10
+
+    # Docker environment (container networking)
+    docker:
+      type: postgres
+      host: "{{ env_var('DBT_POSTGRES_HOST', 'db') }}"
+      user: "{{ env_var('DBT_POSTGRES_USER', 'postgres') }}"
+      password: "{{ env_var('DBT_POSTGRES_PASSWORD', 'postgres') }}"
+      port: "{{ env_var('DBT_POSTGRES_PORT', '5432') | int }}"
+      dbname: "{{ env_var('DBT_POSTGRES_DATABASE', 'quality_compass') }}"
+      schema: public
+      threads: 4
+      keepalives_idle: 0
+      connect_timeout: 10
+
+    # Production environment (stricter settings)
+    prod:
+      type: postgres
+      host: "{{ env_var('DBT_POSTGRES_HOST') }}"
+      user: "{{ env_var('DBT_POSTGRES_USER') }}"
+      password: "{{ env_var('DBT_POSTGRES_PASSWORD') }}"
+      port: "{{ env_var('DBT_POSTGRES_PORT', '5432') | int }}"
+      dbname: "{{ env_var('DBT_POSTGRES_DATABASE') }}"
+      schema: public
+      threads: 8
+      keepalives_idle: 0
+      connect_timeout: 30
+      # SSL configuration for production security
+      # Options: disable, allow, prefer, require, verify-ca, verify-full
+      sslmode: "{{ env_var('DBT_POSTGRES_SSLMODE', 'require') }}"

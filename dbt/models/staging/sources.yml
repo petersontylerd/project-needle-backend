@@ -1,0 +1,157 @@
+# Quality Compass Source Definitions
+# Documentation: https://docs.getdbt.com/docs/build/sources
+#
+# Sources represent raw data loaded from external systems.
+# The Python ETL loader populates these tables from JSON/JSONL/Parquet files.
+
+version: 2
+
+sources:
+  - name: raw
+    description: >
+      Raw data loaded from Project Needle run outputs via Python ETL.
+      Tables are populated by the data loader before dbt runs.
+    database: "{{ env_var('DBT_POSTGRES_DATABASE', 'quality_compass') }}"
+    schema: public
+    tables:
+      - name: raw_node_results
+        description: >
+          Raw node result JSON files loaded from runs/<graph>/<run_id>/results/nodes/.
+          Each row contains the full JSON content of one node result file.
+        freshness:
+          warn_after: {count: 12, period: hour}
+          error_after: {count: 48, period: hour}
+        loaded_at_field: loaded_at
+        columns:
+          - name: run_id
+            description: Analysis run identifier (e.g., '20251210170210')
+            data_tests:
+              - not_null
+          - name: file_path
+            description: Original file path of the JSON file
+          - name: json_data
+            description: Full JSON content as text (parsed to JSONB in staging models)
+            data_tests:
+              - not_null
+          - name: loaded_at
+            description: Timestamp when the row was loaded
+
+      - name: raw_contributions
+        description: >
+          Raw contribution JSONL files loaded from runs/<graph>/<run_id>/contributions/.
+          Each row contains one contribution record from a JSONL file.
+        freshness:
+          warn_after: {count: 24, period: hour}
+          error_after: {count: 72, period: hour}
+        loaded_at_field: loaded_at
+        columns:
+          - name: run_id
+            description: Analysis run identifier
+            data_tests:
+              - not_null
+          - name: json_data
+            description: Single contribution record as JSON text
+            data_tests:
+              - not_null
+          - name: file_path
+            description: Original file path of the JSONL file
+          - name: loaded_at
+            description: Timestamp when the row was loaded
+
+      - name: raw_classifications
+        description: >
+          Raw classification JSONL files from runs/<graph>/<run_id>/analysis/classification/.
+          Each row contains one classification record with signal_type (9 types), severity,
+          glass box inputs, derived indicators, classification reasoning, severity calculation,
+          and 3D matrix dimensional tiers.
+        freshness:
+          warn_after: {count: 24, period: hour}
+          error_after: {count: 72, period: hour}
+        loaded_at_field: loaded_at
+        columns:
+          - name: run_id
+            description: Analysis run identifier
+            data_tests:
+              - not_null
+          - name: json_data
+            description: Single classification record as JSON text
+            data_tests:
+              - not_null
+          - name: file_path
+            description: Original file path of the JSONL file
+          - name: loaded_at
+            description: Timestamp when the row was loaded
+
+      - name: raw_entity_results
+        description: >
+          Raw entity result JSONL files from runs/<graph>/<run_id>/results/entities/.
+          Each row contains one entity result record from a per-node JSONL file.
+          This table avoids loading massive JSON into raw_node_results, enabling
+          efficient PostgreSQL processing during dbt transformation.
+        freshness:
+          warn_after: {count: 24, period: hour}
+          error_after: {count: 72, period: hour}
+        loaded_at_field: loaded_at
+        columns:
+          - name: run_id
+            description: Analysis run identifier
+            data_tests:
+              - not_null
+          - name: canonical_node_id
+            description: Slugified canonical node ID (matches entity file name stem)
+            data_tests:
+              - not_null
+          - name: json_data
+            description: Single entity result record as JSON text
+            data_tests:
+              - not_null
+          - name: file_path
+            description: Original file path of the JSONL file
+          - name: loaded_at
+            description: Timestamp when the row was loaded
+
+      - name: raw_modeling_runs
+        description: >
+          Raw modeling run summary loaded from runs/<graph>/<run_id>/modeling/run_summary.json.
+          Each row contains one run-level summary with config, status, and duration.
+        freshness:
+          warn_after: {count: 24, period: hour}
+          error_after: {count: 72, period: hour}
+        loaded_at_field: loaded_at
+        columns:
+          - name: run_id
+            description: Modeling run identifier
+            data_tests:
+              - not_null
+          - name: config_path
+            description: Path to the modeling configuration file
+          - name: status
+            description: Run status (success, failure, etc.)
+          - name: groups
+            description: JSON array of group identifiers
+          - name: run_dir
+            description: Path to the run output directory
+          - name: duration_seconds
+            description: Total run duration in seconds
+          - name: loaded_at
+            description: Timestamp when the row was loaded
+
+      - name: raw_modeling_experiments
+        description: >
+          Raw modeling experiment details loaded from runs/<graph>/<run_id>/modeling/experiments.json.
+          Each row contains one experiment with metrics, hyperparameters, and artifact paths.
+        freshness:
+          warn_after: {count: 24, period: hour}
+          error_after: {count: 72, period: hour}
+        loaded_at_field: loaded_at
+        columns:
+          - name: run_id
+            description: Modeling run identifier
+            data_tests:
+              - not_null
+          - name: json_data
+            description: Full experiment record as JSON text
+            data_tests:
+              - not_null
+          - name: loaded_at
+            description: Timestamp when the row was loaded

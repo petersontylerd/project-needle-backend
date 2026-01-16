@@ -1,0 +1,286 @@
+# MetricFlow Semantic Models for Quality Compass
+# Documentation: https://docs.getdbt.com/docs/build/semantic-models
+#
+# These semantic models define the entities, dimensions, and measures for
+# Quality Compass analytics. They enable rich documentation in dbt docs and
+# provide the foundation for declarative metric definitions.
+
+version: 2
+
+semantic_models:
+  # ============================================
+  # SIGNALS - Primary fact model for quality signals
+  # ============================================
+  - name: signals
+    description: >
+      Quality signals detected by Project Needle analytics.
+      Each signal represents an entity-metric combination with anomalous behavior
+      relative to peer benchmarks. This is the primary fact model for the
+      Quality Compass dashboard.
+    model: ref('fct_signals')
+    defaults:
+      agg_time_dimension: detected_at
+
+    entities:
+      - name: signal
+        type: primary
+        expr: signal_id
+        description: Unique identifier for each quality signal
+      - name: facility
+        type: foreign
+        expr: facility_sk
+        description: Reference to the facility dimension
+      - name: metric
+        type: foreign
+        expr: metric_sk
+        description: Reference to the metric dimension
+
+    dimensions:
+      - name: detected_at
+        type: time
+        type_params:
+          time_granularity: day
+        expr: detected_at
+        description: Timestamp when the anomaly was detected
+      - name: severity
+        type: categorical
+        expr: severity
+        description: "4-tier severity classification: Critical, High, Moderate, Watch"
+      - name: domain
+        type: categorical
+        expr: domain
+        description: "Quality domain: Efficiency, Safety, Effectiveness"
+      - name: anomaly_classification
+        type: categorical
+        expr: anomaly_classification
+        description: "9-tier anomaly classification from extremely_low to extremely_high"
+      - name: facility_id
+        type: categorical
+        expr: facility_id
+        description: Medicare Provider ID or facility code
+      - name: service_line
+        type: categorical
+        expr: service_line
+        description: Primary service line (e.g., Cardiovascular, Orthopedics)
+      - name: sub_service_line
+        type: categorical
+        expr: sub_service_line
+        description: Sub-service line for detailed breakdown
+      - name: metric_id
+        type: categorical
+        expr: metric_id
+        description: Metric identifier (e.g., losIndex, readmissionRate)
+      - name: direction
+        type: categorical
+        expr: "CASE WHEN z_score > 0 THEN 'above' ELSE 'below' END"
+        description: Whether the signal is above or below the benchmark
+
+    measures:
+      - name: signal_count
+        description: Total number of quality signals
+        agg: count
+        expr: signal_id
+      - name: metric_value_sum
+        description: Sum of metric values across signals
+        agg: sum
+        expr: metric_value
+      - name: metric_value_avg
+        description: Average metric value
+        agg: average
+        expr: metric_value
+      - name: encounters_sum
+        description: Total patient encounters represented
+        agg: sum
+        expr: encounters
+      - name: z_score_sum
+        description: Sum of z-scores (for averaging calculations)
+        agg: sum
+        expr: z_score
+      - name: z_score_magnitude_avg
+        description: Average absolute z-score magnitude
+        agg: average
+        expr: "ABS(z_score)"
+      - name: robust_zscore_magnitude_avg
+        description: Average robust z-score magnitude (MAD-scaled)
+        agg: average
+        expr: "ABS(robust_zscore)"
+      - name: variance_percent_avg
+        description: Average variance from benchmark
+        agg: average
+        expr: variance_percent
+
+  # ============================================
+  # CONTRIBUTIONS - Drill-down analysis
+  # ============================================
+  - name: contributions
+    description: >
+      Contribution analysis showing how child entities (service lines, facilities)
+      contribute to parent aggregate values. Enables root cause drill-down for
+      understanding which segments drive anomalous behavior.
+    model: ref('fct_contributions')
+    defaults:
+      agg_time_dimension: loaded_at
+
+    entities:
+      - name: contribution
+        type: primary
+        expr: contribution_id
+        description: Unique identifier for each contribution relationship
+      - name: parent_facility
+        type: foreign
+        expr: parent_facility_sk
+        description: Reference to the parent facility dimension
+      - name: child_facility
+        type: foreign
+        expr: child_facility_sk
+        description: Reference to the child facility dimension
+      - name: metric
+        type: foreign
+        expr: metric_sk
+        description: Reference to the metric dimension
+
+    dimensions:
+      - name: loaded_at
+        type: time
+        type_params:
+          time_granularity: day
+        expr: loaded_at
+        description: Timestamp when contribution data was loaded
+      - name: contribution_direction
+        type: categorical
+        expr: contribution_direction
+        description: "Direction of impact: positive, negative, neutral"
+      - name: contribution_method
+        type: categorical
+        expr: contribution_method
+        description: "Decomposition method: weighted_mean, simple_mean, sum"
+      - name: metric_id
+        type: categorical
+        expr: metric_id
+        description: Metric being analyzed
+      - name: parent_service_line
+        type: categorical
+        expr: parent_service_line
+        description: Parent entity service line
+      - name: child_service_line
+        type: categorical
+        expr: child_service_line
+        description: Child entity service line
+      - name: child_sub_service_line
+        type: categorical
+        expr: child_sub_service_line
+        description: Child entity sub-service line
+
+    measures:
+      - name: contribution_count
+        description: Number of contribution relationships
+        agg: count
+        expr: contribution_id
+      - name: total_contribution_weight
+        description: Sum of impact scores
+        agg: sum
+        expr: contribution_weight
+      - name: avg_contribution_weight
+        description: Average impact score
+        agg: average
+        expr: contribution_weight
+      - name: avg_weight_share
+        description: Average weight share proportion
+        agg: average
+        expr: weight_share
+      - name: total_excess_over_parent
+        description: Sum of excess over parent values
+        agg: sum
+        expr: excess_over_parent
+      - name: positive_contributions
+        description: Count of positive impact contributions
+        agg: count
+        expr: "CASE WHEN contribution_direction = 'positive' THEN contribution_id END"
+      - name: negative_contributions
+        description: Count of negative impact contributions
+        agg: count
+        expr: "CASE WHEN contribution_direction = 'negative' THEN contribution_id END"
+
+  # ============================================
+  # FACILITIES - Dimension
+  # ============================================
+  - name: facilities
+    description: >
+      Facility dimension with site-of-care attributes. Each facility represents
+      a healthcare provider identified by Medicare Provider ID.
+    model: ref('dim_facilities')
+    defaults:
+      agg_time_dimension: first_seen_at
+
+    entities:
+      - name: facility
+        type: primary
+        expr: facility_sk
+        description: Surrogate key for facility dimension
+
+    dimensions:
+      - name: facility_id
+        type: categorical
+        expr: facility_id
+        description: Natural key (Medicare Provider ID)
+      - name: facility_name
+        type: categorical
+        expr: facility_name
+        description: Human-readable facility name
+      - name: primary_service_line
+        type: categorical
+        expr: primary_service_line
+        description: Most common service line for this facility
+      - name: first_seen_at
+        type: time
+        type_params:
+          time_granularity: day
+        expr: first_seen_at
+        description: Earliest observation timestamp
+
+    measures:
+      - name: facility_count
+        description: Number of unique facilities
+        agg: count_distinct
+        expr: facility_id
+      - name: facility_encounters_total
+        description: Total encounters across facilities
+        agg: sum
+        expr: total_encounters
+
+  # ============================================
+  # METRICS - Dimension
+  # ============================================
+  - name: metrics_dim
+    description: >
+      Metric dimension with semantic descriptions. Provides plain-language
+      context for metric identifiers and categorization by quality domain.
+    model: ref('dim_metrics')
+
+    entities:
+      - name: metric
+        type: primary
+        expr: metric_sk
+        description: Surrogate key for metric dimension
+
+    dimensions:
+      - name: metric_id
+        type: categorical
+        expr: metric_id
+        description: "Natural key (e.g., losIndex, readmissionRate)"
+      - name: metric_name
+        type: categorical
+        expr: metric_name
+        description: Human-readable metric name
+      - name: domain
+        type: categorical
+        expr: domain
+        description: "Quality domain: Efficiency, Safety, Effectiveness, Other"
+      - name: direction_preference
+        type: categorical
+        expr: direction_preference
+        description: "Whether lower or higher is better: lower_is_better, higher_is_better, context_dependent"
+      - name: unit_type
+        type: categorical
+        expr: unit_type
+        description: "Unit of measurement: index, percentage, currency, days, count, numeric"

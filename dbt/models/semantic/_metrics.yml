@@ -1,0 +1,341 @@
+# MetricFlow Metric Definitions for Quality Compass
+# Documentation: https://docs.getdbt.com/docs/build/metrics-overview
+#
+# These declarative metrics define business KPIs for healthcare quality analytics.
+# Each metric is computed from underlying semantic model measures and can be
+# filtered by dimensions, aggregated over time, and displayed in dbt docs.
+
+version: 2
+
+metrics:
+  # ============================================
+  # SIGNAL VOLUME METRICS
+  # ============================================
+
+  - name: total_signals
+    description: Total count of quality signals detected across all facilities and metrics
+    type: simple
+    label: Total Signals
+    type_params:
+      measure: signal_count
+    meta:
+      category: Volume
+      display_format: "{:,.0f}"
+      icon: bell
+
+  - name: critical_signals
+    description: Count of critical severity signals requiring immediate attention and intervention
+    type: simple
+    label: Critical Signals
+    type_params:
+      measure: signal_count
+    filter:
+      - "{{ Dimension('signal__severity') }} = 'Critical'"
+    meta:
+      category: Volume
+      display_format: "{:,.0f}"
+      severity: critical
+      icon: alert-triangle
+
+  - name: high_priority_signals
+    description: Count of high severity signals that should be reviewed promptly
+    type: simple
+    label: High Priority Signals
+    type_params:
+      measure: signal_count
+    filter:
+      - "{{ Dimension('signal__severity') }} = 'High'"
+    meta:
+      category: Volume
+      display_format: "{:,.0f}"
+      severity: high
+      icon: alert-circle
+
+  - name: moderate_signals
+    description: Count of moderate severity signals for routine monitoring
+    type: simple
+    label: Moderate Signals
+    type_params:
+      measure: signal_count
+    filter:
+      - "{{ Dimension('signal__severity') }} = 'Moderate'"
+    meta:
+      category: Volume
+      display_format: "{:,.0f}"
+      severity: moderate
+
+  - name: watch_signals
+    description: Count of watch-level signals for awareness tracking
+    type: simple
+    label: Watch Signals
+    type_params:
+      measure: signal_count
+    filter:
+      - "{{ Dimension('signal__severity') }} = 'Watch'"
+    meta:
+      category: Volume
+      display_format: "{:,.0f}"
+      severity: watch
+
+  - name: critical_signal_rate
+    description: Percentage of signals that are critical severity - indicates overall urgency level
+    type: derived
+    label: Critical Signal Rate
+    type_params:
+      expr: critical_signals * 100.0 / NULLIF(total_signals, 0)
+      metrics:
+        - critical_signals
+        - total_signals
+    meta:
+      category: Ratio
+      display_format: "{:.1f}%"
+      unit: percentage
+      interpretation: "Higher values indicate more urgent quality issues"
+
+  - name: actionable_signal_rate
+    description: Percentage of signals that are Critical or High severity and require action
+    type: derived
+    label: Actionable Signal Rate
+    type_params:
+      expr: (critical_signals + high_priority_signals) * 100.0 / NULLIF(total_signals, 0)
+      metrics:
+        - critical_signals
+        - high_priority_signals
+        - total_signals
+    meta:
+      category: Ratio
+      display_format: "{:.1f}%"
+      unit: percentage
+
+  # ============================================
+  # DOMAIN-SPECIFIC METRICS
+  # ============================================
+
+  - name: efficiency_signals
+    description: Signals in the Efficiency domain measuring LOS, cost, and throughput performance
+    type: simple
+    label: Efficiency Signals
+    type_params:
+      measure: signal_count
+    filter:
+      - "{{ Dimension('signal__domain') }} = 'Efficiency'"
+    meta:
+      category: Domain
+      domain: Efficiency
+      icon: clock
+
+  - name: safety_signals
+    description: Signals in the Safety domain measuring mortality, infections, falls, and adverse events
+    type: simple
+    label: Safety Signals
+    type_params:
+      measure: signal_count
+    filter:
+      - "{{ Dimension('signal__domain') }} = 'Safety'"
+    meta:
+      category: Domain
+      domain: Safety
+      icon: shield
+
+  - name: effectiveness_signals
+    description: Signals in the Effectiveness domain measuring readmissions and care outcomes
+    type: simple
+    label: Effectiveness Signals
+    type_params:
+      measure: signal_count
+    filter:
+      - "{{ Dimension('signal__domain') }} = 'Effectiveness'"
+    meta:
+      category: Domain
+      domain: Effectiveness
+      icon: target
+
+  - name: efficiency_signal_share
+    description: Percentage of total signals in the Efficiency domain
+    type: derived
+    label: Efficiency Signal Share
+    type_params:
+      expr: efficiency_signals * 100.0 / NULLIF(total_signals, 0)
+      metrics:
+        - efficiency_signals
+        - total_signals
+    meta:
+      category: Domain
+      display_format: "{:.1f}%"
+      domain: Efficiency
+
+  - name: safety_signal_share
+    description: Percentage of total signals in the Safety domain
+    type: derived
+    label: Safety Signal Share
+    type_params:
+      expr: safety_signals * 100.0 / NULLIF(total_signals, 0)
+      metrics:
+        - safety_signals
+        - total_signals
+    meta:
+      category: Domain
+      display_format: "{:.1f}%"
+      domain: Safety
+
+  # ============================================
+  # STATISTICAL MAGNITUDE METRICS
+  # ============================================
+
+  - name: avg_z_score_magnitude
+    description: Average absolute z-score across all signals - measures statistical significance of deviations
+    type: simple
+    label: Avg Z-Score Magnitude
+    type_params:
+      measure: z_score_magnitude_avg
+    meta:
+      category: Statistical
+      display_format: "{:.2f}"
+      interpretation: "Higher values indicate more extreme deviations from peer benchmarks"
+      unit: standard_deviations
+
+  - name: avg_robust_zscore_magnitude
+    description: Average robust z-score magnitude using MAD scaling - resistant to outliers
+    type: simple
+    label: Avg Robust Z-Score
+    type_params:
+      measure: robust_zscore_magnitude_avg
+    meta:
+      category: Statistical
+      display_format: "{:.2f}"
+      interpretation: "MAD-scaled z-score, more stable than simple z-score"
+
+  - name: avg_variance_from_benchmark
+    description: Average percentage variance from peer benchmarks across all signals
+    type: simple
+    label: Avg Variance %
+    type_params:
+      measure: variance_percent_avg
+    meta:
+      category: Performance
+      display_format: "{:.1f}%"
+      unit: percentage
+
+  # ============================================
+  # COVERAGE METRICS
+  # ============================================
+
+  - name: total_encounters_covered
+    description: Total patient encounters represented by all signals - measures analytical coverage
+    type: simple
+    label: Total Encounters
+    type_params:
+      measure: encounters_sum
+    meta:
+      category: Coverage
+      display_format: "{:,.0f}"
+      unit: encounters
+
+  - name: unique_facilities
+    description: Count of unique facilities with at least one quality signal
+    type: simple
+    label: Facilities with Signals
+    type_params:
+      measure: facility_count
+    meta:
+      category: Coverage
+      display_format: "{:,.0f}"
+      unit: facilities
+
+  - name: signals_per_facility
+    description: Average number of signals per facility - indicates signal density
+    type: derived
+    label: Signals per Facility
+    type_params:
+      expr: total_signals * 1.0 / NULLIF(unique_facilities, 0)
+      metrics:
+        - total_signals
+        - unique_facilities
+    meta:
+      category: Ratio
+      display_format: "{:.1f}"
+      interpretation: "Higher values may indicate more comprehensive monitoring or systemic issues"
+
+  # ============================================
+  # CONTRIBUTION ANALYSIS METRICS
+  # ============================================
+
+  - name: total_contributions
+    description: Total contribution relationships analyzed for root cause decomposition
+    type: simple
+    label: Total Contributions
+    type_params:
+      measure: contribution_count
+    meta:
+      category: Contribution
+      display_format: "{:,.0f}"
+
+  - name: avg_impact_score
+    description: Average contribution impact score (|excess| x weight_share) across all relationships
+    type: simple
+    label: Avg Impact Score
+    type_params:
+      measure: avg_contribution_weight
+    meta:
+      category: Contribution
+      display_format: "{:.4f}"
+      interpretation: "Higher values indicate more influential child entities"
+
+  - name: positive_contributors
+    description: Count of child entities contributing positively (unfavorably) to parent anomaly
+    type: simple
+    label: Positive Contributors
+    type_params:
+      measure: positive_contributions
+    meta:
+      category: Contribution
+      display_format: "{:,.0f}"
+
+  - name: negative_contributors
+    description: Count of child entities contributing negatively (favorably) to parent anomaly
+    type: simple
+    label: Negative Contributors
+    type_params:
+      measure: negative_contributions
+    meta:
+      category: Contribution
+      display_format: "{:,.0f}"
+
+  - name: positive_contributor_rate
+    description: Percentage of contributions with positive (unfavorable) impact on parent metric
+    type: derived
+    label: Positive Contributor Rate
+    type_params:
+      expr: "positive_contributors * 100.0 / NULLIF(total_contributions, 0)"
+      metrics:
+        - positive_contributors
+        - total_contributions
+    meta:
+      category: Ratio
+      display_format: "{:.1f}%"
+
+  # ============================================
+  # TREND METRICS (Time-based)
+  # ============================================
+
+  - name: cumulative_signals
+    description: Running total of signals over time - useful for trend analysis
+    type: cumulative
+    label: Cumulative Signals
+    type_params:
+      measure: signal_count
+    meta:
+      category: Trend
+      display_format: "{:,.0f}"
+      chart_type: line
+
+  - name: cumulative_encounters
+    description: Running total of patient encounters analyzed over time
+    type: cumulative
+    label: Cumulative Encounters
+    type_params:
+      measure: encounters_sum
+    meta:
+      category: Trend
+      display_format: "{:,.0f}"
+      chart_type: line

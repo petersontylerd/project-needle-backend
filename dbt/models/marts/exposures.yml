@@ -1,0 +1,75 @@
+# Quality Compass Exposure Definitions
+# Documentation: https://docs.getdbt.com/docs/build/exposures
+#
+# Exposures document downstream consumers of dbt models.
+# They appear in dbt docs lineage graphs and help track model usage.
+
+version: 2
+
+exposures:
+  - name: signal_hydrator_service
+    label: Signal Hydrator Service
+    type: application
+    maturity: high
+    description: >
+      FastAPI service endpoint that hydrates signal data for the Quality Compass
+      frontend. Queries fct_signals to retrieve anomaly signals with severity,
+      domain, and statistical context. Also queries fct_contributions for
+      drill-down contribution analysis.
+    depends_on:
+      - ref('fct_signals')
+      - ref('fct_contributions')
+      - ref('dim_facilities')
+      - ref('dim_metrics')
+    owner:
+      name: Quality Compass Team
+      email: quality-compass@projectneedle.dev
+
+  - name: contribution_service
+    label: Contribution Analysis Service
+    type: application
+    maturity: high
+    description: >
+      FastAPI service endpoint providing contribution decomposition data.
+      Shows how child entities (service lines, sub-service lines) contribute
+      to parent aggregate metric values, enabling targeted improvement efforts.
+    depends_on:
+      - ref('fct_contributions')
+      - ref('dim_facilities')
+      - ref('dim_metrics')
+    owner:
+      name: Quality Compass Team
+      email: quality-compass@projectneedle.dev
+
+  - name: quality_compass_frontend
+    label: Quality Compass Dashboard
+    type: dashboard
+    maturity: high
+    url: https://quality-compass.projectneedle.dev
+    description: >
+      React-based dashboard for healthcare quality improvement. Displays
+      signals with severity prioritization and enables drill-down analysis via
+      contributions.
+    depends_on:
+      - ref('fct_signals')
+      - ref('fct_contributions')
+      - ref('dim_facilities')
+      - ref('dim_metrics')
+    owner:
+      name: Quality Compass Team
+      email: quality-compass@projectneedle.dev
+
+  - name: signal_workflow_service
+    label: Signal Workflow Service
+    type: application
+    maturity: medium
+    description: >
+      FastAPI service managing signal lifecycle workflow. Handles signal
+      status transitions (New, Acknowledged, In Progress, Resolved, Dismissed),
+      activity tracking, and team assignments.
+    depends_on:
+      - ref('fct_signals')
+      - ref('dim_facilities')
+    owner:
+      name: Quality Compass Team
+      email: quality-compass@projectneedle.dev

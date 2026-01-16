@@ -1,0 +1,2048 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2026-01-16T02:44:31.587996+00:00",
+  "taxonomy_hash": "cc86d2cfba895105",
+  "metrics": [
+    {
+      "metric_id": "icuCasesFromIcuFile",
+      "display_name": "ICU Cases (ICU Extract)",
+      "description": "Total number of ICU encounters recorded in the governed ICU data extract. Volume measure for intensive care utilization.",
+      "domain": "Utilization",
+      "polarity": "neutral",
+      "unit_type": "count",
+      "display_format": "{:,d}",
+      "null_fill_value": null,
+      "null_fill_rationale": ""
+    },
+    {
+      "metric_id": "losIndex",
+      "display_name": "Length of Stay Index",
+      "description": "Ratio of observed to expected length of stay, adjusted for case mix. Values >1.0 indicate longer stays than expected; <1.0 indicates shorter.",
+      "domain": "Efficiency",
+      "polarity": "lower_is_better",
+      "unit_type": "ratio",
+      "display_format": "{:.2f}",
+      "null_fill_value": null,
+      "null_fill_rationale": ""
+    },
+    {
+      "metric_id": "losMeanExpectedDays",
+      "display_name": "Mean Expected LOS (Days)",
+      "description": "Risk-adjusted expected length of stay in days, based on case mix and severity. Used as the benchmark for LOS Index calculation.",
+      "domain": "Efficiency",
+      "polarity": "neutral",
+      "unit_type": "days",
+      "display_format": "{:.1f}",
+      "null_fill_value": null,
+      "null_fill_rationale": ""
+    },
+    {
+      "metric_id": "losMeanObservedDays",
+      "display_name": "Mean Observed LOS (Days)",
+      "description": "Average observed length of stay in days across all discharges in the cohort. Raw measure of hospitalization duration.",
+      "domain": "Efficiency",
+      "polarity": "lower_is_better",
+      "unit_type": "days",
+      "display_format": "{:.1f}",
+      "null_fill_value": null,
+      "null_fill_rationale": ""
+    },
+    {
+      "metric_id": "losVarianceDays",
+      "display_name": "LOS Variance (Days)",
+      "description": "Variance of inpatient length of stay measured in days for the entity cohort. Represents the spread of LOS around the mean.",
+      "domain": "Efficiency",
+      "polarity": "lower_is_better",
+      "unit_type": "days",
+      "display_format": "{:.1f}",
+      "null_fill_value": null,
+      "null_fill_rationale": ""
+    },
+    {
+      "metric_id": "meanIcuDaysIcuFile",
+      "display_name": "Mean ICU Days (ICU Extract)",
+      "description": "Average number of days patients spend in the ICU, sourced from the governed ICU extract. Reflects ICU length of stay intensity.",
+      "domain": "Efficiency",
+      "polarity": "lower_is_better",
+      "unit_type": "days",
+      "display_format": "{:.1f}",
+      "null_fill_value": 0.0,
+      "null_fill_rationale": "Null indicates zero ICU encounters for this entity (pctIcuEncountersIcuFile = 0). Semantically, if no patients went to the ICU, mean ICU days is 0."
+    },
+    {
+      "metric_id": "pctAllReturnsToIcu",
+      "display_name": "ICU Return Rate (All Returns)",
+      "description": "Percentage of patients who return to the ICU during the same hospitalization. Indicator of care quality and patient stability after ICU discharge.",
+      "domain": "Safety",
+      "polarity": "lower_is_better",
+      "unit_type": "percentage",
+      "display_format": "{:.1f}%",
+      "null_fill_value": null,
+      "null_fill_rationale": ""
+    },
+    {
+      "metric_id": "pctIcuEncountersIcuFile",
+      "display_name": "ICU Encounter Percentage",
+      "description": "Percentage of total encounters that include an ICU stay, per the governed ICU extract. Reflects case mix intensity and acuity distribution.",
+      "domain": "Utilization",
+      "polarity": "neutral",
+      "unit_type": "percentage",
+      "display_format": "{:.1f}%",
+      "null_fill_value": null,
+      "null_fill_rationale": ""
+    }
+  ],
+  "edge_types": [
+    {
+      "id": "aggregates_from",
+      "display_name": "Aggregates From",
+      "description": "Roll-up relationship indicating this signal is computed by aggregating multiple source signals. The reverse of segmentation.",
+      "ui_behavior": "expand",
+      "direction": "forward",
+      "category": "hierarchical"
+    },
+    {
+      "id": "contradicts",
+      "display_name": "Contradicts",
+      "description": "Conflict relationship where signals present opposing or inconsistent information. Flags potential data quality issues or anomalies.",
+      "ui_behavior": "expand",
+      "direction": "forward",
+      "category": "causal"
+    },
+    {
+      "id": "decomposes_to",
+      "display_name": "Components",
+      "description": "Breakdown relationship showing the constituent factors of a composite metric. Enables variance analysis and contribution tracking.",
+      "ui_behavior": "expand",
+      "direction": "forward",
+      "category": "analytical"
+    },
+    {
+      "id": "derives_to",
+      "display_name": "Derived Signal",
+      "description": "Computational relationship where one signal is mathematically derived from another. Indicates formula-based dependency.",
+      "ui_behavior": "expand",
+      "direction": "forward",
+      "category": "analytical"
+    },
+    {
+      "id": "drills_to",
+      "display_name": "View Details",
+      "description": "Hierarchical drill-down from a parent aggregation to child detail entities. Enables navigation from high-level metrics to underlying components.",
+      "ui_behavior": "slide_right",
+      "direction": "forward",
+      "category": "hierarchical"
+    },
+    {
+      "id": "explains",
+      "display_name": "Explains",
+      "description": "Analytical relationship where one signal provides context or explanation for another. The source signal helps interpret the target signal.",
+      "ui_behavior": "expand",
+      "direction": "forward",
+      "category": "analytical"
+    },
+    {
+      "id": "potentially_driven_by",
+      "display_name": "Explore Driver",
+      "description": "Exploratory navigation from an outcome signal to a potential driver dimension. Suggests the source outcome may be influenced by the target dimension but does not assert causation. Used for hypothesis generation and root cause analysis.",
+      "ui_behavior": "expand",
+      "direction": "forward",
+      "category": "analytical"
+    },
+    {
+      "id": "relates_to",
+      "display_name": "Related Signal",
+      "description": "General association between two signals that share context or correlation. Does not imply causation or hierarchy.",
+      "ui_behavior": "expand",
+      "direction": "bidirectional",
+      "category": "analytical"
+    },
+    {
+      "id": "segments_into",
+      "display_name": "View Segment",
+      "description": "Segmentation from a whole to its constituent parts without hierarchy. Shows how a metric decomposes into discrete segments.",
+      "ui_behavior": "slide_right",
+      "direction": "forward",
+      "category": "hierarchical"
+    },
+    {
+      "id": "supports",
+      "display_name": "Supports",
+      "description": "Evidence relationship where one signal reinforces or confirms another. Indicates corroborating information.",
+      "ui_behavior": "expand",
+      "direction": "forward",
+      "category": "causal"
+    },
+    {
+      "id": "trends_to",
+      "display_name": "View Trend",
+      "description": "Temporal navigation from an aggregate summary to a time-series breakdown. Enables viewing how a metric changes over time periods.",
+      "ui_behavior": "slide_right",
+      "direction": "forward",
+      "category": "temporal"
+    }
+  ],
+  "tag_types": [
+    {
+      "id": "los",
+      "display_name": "Length of Stay",
+      "category": "domain",
+      "description": "Metrics and narratives focused on length-of-stay performance.",
+      "ui_filter_ids": []
+    },
+    {
+      "id": "throughput",
+      "display_name": "Throughput",
+      "category": "operational_focus",
+      "description": "Artifacts that evaluate patient throughput and flow dynamics.",
+      "ui_filter_ids": []
+    },
+    {
+      "id": "trend",
+      "display_name": "Trend",
+      "category": "analytic_pattern",
+      "description": "Insights emphasizing longitudinal movement or deltas over time.",
+      "ui_filter_ids": []
+    }
+  ],
+  "comparison_modes": [
+    {
+      "id": "benchmark",
+      "display_name": "Benchmark Baseline",
+      "description": "Benchmarks entity metrics against a governance-defined benchmark trajectory rather than peer trends.",
+      "baseline_description": "Governance-defined benchmark baseline for the metric.",
+      "authoring_hint": "Use when a metric_method_set compares entity performance to a defined benchmark target instead of peers."
+    },
+    {
+      "id": "entity_trend",
+      "display_name": "Entity Trend Baseline",
+      "description": "Benchmarks metrics against the entity's own historical performance window.",
+      "baseline_description": "Entity historical trend across the selected time periods",
+      "authoring_hint": "Reference this mode when a metric_method_set comparison uses the entity's history as the baseline."
+    },
+    {
+      "id": "peer_cohort",
+      "display_name": "Peer Cohort Benchmark",
+      "description": "Compares entity metrics against Vizient-matched peer cohort distributions.",
+      "baseline_description": "Vizient peer cohort for the facility",
+      "authoring_hint": "Reference this mode when a metric_method_set comparison benchmarks the entity versus peers."
+    },
+    {
+      "id": "vizient_qa_amc_2025",
+      "display_name": "Vizient Quality & Accountability Study AMC Cohort Distribution",
+      "description": "Benchmarks each entity against the Vizient Quality & Accountability Study 2025 academic medical center cohort for aggregated periods.",
+      "baseline_description": "Vizient QA Study 2025 academic medical center peer distribution for the aggregated time period",
+      "authoring_hint": "Use when a metric_method_set baselines entity performance against the Vizient QA AMC 2025 cohort distribution."
+    }
+  ],
+  "group_by_types": [
+    {
+      "id": "admissionSource",
+      "display_name": "Admission Source",
+      "category": "status_flow",
+      "dataset_field": "admissionSource",
+      "description": "Admission point-of-origin labels describing where patients arrived from prior to inpatient intake.",
+      "allowed_values": [
+        {
+          "code": "Born inside this Hospital",
+          "identifier": "5",
+          "label": "Born inside this Hospital"
+        },
+        {
+          "code": "Born outside of this Hospital",
+          "identifier": "6",
+          "label": "Born outside of this Hospital"
+        },
+        {
+          "code": "Clinic/Physician's Office",
+          "identifier": "2",
+          "label": "Clinic/Physician's Office"
+        },
+        {
+          "code": "Court/law enforcement",
+          "identifier": "8",
+          "label": "Court/law enforcement"
+        },
+        {
+          "code": "Information not available - Newborn",
+          "identifier": "9",
+          "label": "Information not available - Newborn"
+        },
+        {
+          "code": "Information not available - Non-newborn",
+          "identifier": "9",
+          "label": "Information not available - Non-newborn"
+        },
+        {
+          "code": "Non-Health Care Facility Point of Origin",
+          "identifier": "1",
+          "label": "Non-Health Care Facility Point of Origin"
+        },
+        {
+          "code": "Transfer from a hospital",
+          "identifier": "4",
+          "label": "Transfer from a hospital"
+        },
+        {
+          "code": "Transfer from a SNF, ICF, ALF or NR",
+          "identifier": "5",
+          "label": "Transfer from a SNF, ICF, ALF or NR"
+        },
+        {
+          "code": "Transfer from Ambulatory Surgery Center",
+          "identifier": "E",
+          "label": "Transfer from Ambulatory Surgery Center"
+        },
+        {
+          "code": "Transfer from another healthcare facility",
+          "identifier": "6",
+          "label": "Transfer from another healthcare facility"
+        },
+        {
+          "code": "Transfer from designated disaster alt care site",
+          "identifier": "G",
+          "label": "Transfer from designated disaster alt care site"
+        },
+        {
+          "code": "Transfer from Hospice and is Under a Hospice Plan of Care or Enrolled in a Hospice Program",
+          "identifier": "F",
+          "label": "Transfer from Hospice and is Under a Hospice Plan of Care or Enrolled in a Hospice Program"
+        },
+        {
+          "code": "Transfer from one distinct unit of the hospital to another",
+          "identifier": "D",
+          "label": "Transfer from one distinct unit of the hospital to another"
+        }
+      ]
+    },
+    {
+      "id": "admissionStatus",
+      "display_name": "Admission Status",
+      "category": "status_flow",
+      "dataset_field": "admissionStatus",
+      "description": "Admission urgency classification leveraged in encounter-level analytics.",
+      "allowed_values": [
+        {
+          "code": "Elective",
+          "identifier": "3",
+          "label": "Elective"
+        },
+        {
+          "code": "Emergency",
+          "identifier": "1",
+          "label": "Emergency"
+        },
+        {
+          "code": "Info unavailable",
+          "identifier": "9",
+          "label": "Info unavailable"
+        },
+        {
+          "code": "Newborn",
+          "identifier": "4",
+          "label": "Newborn"
+        },
+        {
+          "code": "Trauma Center",
+          "identifier": "5",
+          "label": "Trauma Center"
+        },
+        {
+          "code": "Urgent",
+          "identifier": "2",
+          "label": "Urgent"
+        }
+      ]
+    },
+    {
+      "id": "dischargeMonth",
+      "display_name": "Discharge Month",
+      "category": "time",
+      "dataset_field": "dischargeMonth",
+      "description": "Calendar month of discharge (YYYY-MM) present in monthly throughput LOS extracts.",
+      "allowed_values": []
+    },
+    {
+      "id": "dischargeQuarter",
+      "display_name": "Discharge Quarter",
+      "category": "time",
+      "dataset_field": "dischargeQuarter",
+      "description": "Calendar quarter of discharge (YYYY-Q) present in quarterly throughput LOS extracts.",
+      "allowed_values": []
+    },
+    {
+      "id": "dischargeStatus",
+      "display_name": "Discharge Status",
+      "category": "status_flow",
+      "dataset_field": "dischargeStatus",
+      "description": "Disposition label describing where patients were discharged (e.g., home, SNF, home health).",
+      "allowed_values": [
+        {
+          "code": "Discharged to home care or self care (routine discharge)",
+          "identifier": "01",
+          "label": "Discharged to home care or self care (routine discharge)"
+        },
+        {
+          "code": "Discharged/transferred to another short term general hospital for inpatient care",
+          "identifier": "02",
+          "label": "Discharged/transferred to another short term general hospital for inpatient care"
+        },
+        {
+          "code": "Discharged/transferred to skilled nursing facility (SNF) with Medicare certification in anticipation of covered skilled care",
+          "identifier": "03",
+          "label": "Discharged/transferred to skilled nursing facility (SNF) with Medicare certification in anticipation of covered skilled care"
+        },
+        {
+          "code": "Discharged/transferred to custodial or supportive care facility",
+          "identifier": "04",
+          "label": "Discharged/transferred to custodial or supportive care facility"
+        },
+        {
+          "code": "Discharged/transferred to a designated cancer center or children\u2019s hospital",
+          "identifier": "05",
+          "label": "Discharged/transferred to a designated cancer center or children\u2019s hospital"
+        },
+        {
+          "code": "Discharged/transferred to home under care of organized home health service",
+          "identifier": "06",
+          "label": "Discharged/transferred to home under care of organized home health service"
+        },
+        {
+          "code": "Left against medical advice or discontinued care",
+          "identifier": "07",
+          "label": "Left against medical advice or discontinued care"
+        },
+        {
+          "code": "Admitted as inpatient to this hospital - Outpatient Only",
+          "identifier": "09",
+          "label": "Admitted as inpatient to this hospital - Outpatient Only"
+        },
+        {
+          "code": "Expired - should be used for all in-hospital deaths (i.e., non-hospice patients)",
+          "identifier": "20",
+          "label": "Expired - should be used for all in-hospital deaths (i.e., non-hospice patients)"
+        },
+        {
+          "code": "Discharged/Transferred to Court/Law Enforcement",
+          "identifier": "21",
+          "label": "Discharged/Transferred to Court/Law Enforcement"
+        },
+        {
+          "code": "Expired at home (for hospice care only)",
+          "identifier": "40",
+          "label": "Expired at home (for hospice care only)"
+        },
+        {
+          "code": "Expired in a medical facility such as hospital, SNF, ICF, or freestanding hospice. (Hospice claims only)",
+          "identifier": "41",
+          "label": "Expired in a medical facility such as hospital, SNF, ICF, or freestanding hospice. (Hospice claims only)"
+        },
+        {
+          "code": "Expired - place unknown (Hospice claims only)",
+          "identifier": "42",
+          "label": "Expired - place unknown (Hospice claims only)"
+        },
+        {
+          "code": "Discharged/transferred to a federal hospital",
+          "identifier": "43",
+          "label": "Discharged/transferred to a federal hospital"
+        },
+        {
+          "code": "Discharged to Hospice - home",
+          "identifier": "50",
+          "label": "Discharged to Hospice - home"
+        },
+        {
+          "code": "Discharged to Hospice - medical facility (certified)",
+          "identifier": "51",
+          "label": "Discharged to Hospice - medical facility (certified)"
+        },
+        {
+          "code": "Discharged/transferred to a hospital-based Medicare approved swing bed",
+          "identifier": "61",
+          "label": "Discharged/transferred to a hospital-based Medicare approved swing bed"
+        },
+        {
+          "code": "Discharged/transferred to an inpatient rehabilitation facility including rehabilitiation distinct part units of a hospital",
+          "identifier": "62",
+          "label": "Discharged/transferred to an inpatient rehabilitation facility including rehabilitiation distinct part units of a hospital"
+        },
+        {
+          "code": "Discharged/transferred to a Medicare Certified long term care hospital",
+          "identifier": "63",
+          "label": "Discharged/transferred to a Medicare Certified long term care hospital"
+        },
+        {
+          "code": "Discharged/transferred to a nursing facility certified under Medicaid but not certified under Medicare",
+          "identifier": "64",
+          "label": "Discharged/transferred to a nursing facility certified under Medicaid but not certified under Medicare"
+        },
+        {
+          "code": "Discharged/Transferred to a psychiatric hospital or psychiatric distinct part unit of a hospital",
+          "identifier": "65",
+          "label": "Discharged/Transferred to a psychiatric hospital or psychiatric distinct part unit of a hospital"
+        },
+        {
+          "code": "Discharged/transferred to a Critical Access Hospital (CAH)",
+          "identifier": "66",
+          "label": "Discharged/transferred to a Critical Access Hospital (CAH)"
+        },
+        {
+          "code": "Discharge/transferred to a designated disaster alternative care site",
+          "identifier": "69",
+          "label": "Discharge/transferred to a designated disaster alternative care site"
+        },
+        {
+          "code": "Discharged/Transferred to Another Type of Healthcare Institution Not Defined Elsewhere in This Code List",
+          "identifier": "70",
+          "label": "Discharged/Transferred to Another Type of Healthcare Institution Not Defined Elsewhere in This Code List"
+        },
+        {
+          "code": "Discharged to Home/Self-care with a planned acute care hospital inpatient readmission",
+          "identifier": "81",
+          "label": "Discharged to Home/Self-care with a planned acute care hospital inpatient readmission"
+        },
+        {
+          "code": "Discharged/transferred to another short-term general hospital for inpatient care with a planned acute care hospital inpatient readmission",
+          "identifier": "82",
+          "label": "Discharged/transferred to another short-term general hospital for inpatient care with a planned acute care hospital inpatient readmission"
+        },
+        {
+          "code": "Discharged/transferred to skilled nursing facility with Medicare certification with a planned acute care hospital inpatient readmission",
+          "identifier": "83",
+          "label": "Discharged/transferred to skilled nursing facility with Medicare certification with a planned acute care hospital inpatient readmission"
+        },
+        {
+          "code": "Discharged/transferred to custodial or supportive care facility with a planned acute care hospital inpatient readmission",
+          "identifier": "84",
+          "label": "Discharged/transferred to custodial or supportive care facility with a planned acute care hospital inpatient readmission"
+        },
+        {
+          "code": "Discharged/transferred to a Children\u2019s Hospital or Cancer Center with a planned acute care hospital inpatient readmission",
+          "identifier": "85",
+          "label": "Discharged/transferred to a Children\u2019s Hospital or Cancer Center with a planned acute care hospital inpatient readmission"
+        },
+        {
+          "code": "Discharged/ transferred to home under care of organized health service organization with a planned acute care hospital inpatient readmission",
+          "identifier": "86",
+          "label": "Discharged/ transferred to home under care of organized health service organization with a planned acute care hospital inpatient readmission"
+        },
+        {
+          "code": "Discharged/transferred to court/law enforcement with a planned acute care hospital inpatient readmission",
+          "identifier": "87",
+          "label": "Discharged/transferred to court/law enforcement with a planned acute care hospital inpatient readmission"
+        },
+        {
+          "code": "Discharged/transferred to a federal hospital with a planned acute care hospital inpatient readmission",
+          "identifier": "88",
+          "label": "Discharged/transferred to a federal hospital with a planned acute care hospital inpatient readmission"
+        },
+        {
+          "code": "Discharged/transferred within this institution to hospital-based Medicare-approved swing bed with a planned acute care hospital inpatient readmission",
+          "identifier": "89",
+          "label": "Discharged/transferred within this institution to hospital-based Medicare-approved swing bed with a planned acute care hospital inpatient readmission"
+        },
+        {
+          "code": "Discharged/transferred to an inpatient rehabilitation facility (IRF) including rehabilitation distinct part units of a hospital with a planned acute care hospital inpatient readmission",
+          "identifier": "90",
+          "label": "Discharged/transferred to an inpatient rehabilitation facility (IRF) including rehabilitation distinct part units of a hospital with a planned acute care hospital inpatient readmission"
+        },
+        {
+          "code": "Discharged/ transferred to a Medicare-certified long term care hospital (LTCH) with a planned acute care hospital inpatient readmission",
+          "identifier": "91",
+          "label": "Discharged/ transferred to a Medicare-certified long term care hospital (LTCH) with a planned acute care hospital inpatient readmission"
+        },
+        {
+          "code": "Discharged/ transferred to a nursing facility certified under Medicaid but not certified under Medicare with a planned acute care hospital inpatient readmission",
+          "identifier": "92",
+          "label": "Discharged/ transferred to a nursing facility certified under Medicaid but not certified under Medicare with a planned acute care hospital inpatient readmission"
+        },
+        {
+          "code": "Discharged/transferred to a psychiatric hospital or psychiatric part unit of a hospital with a planned acute care hospital inpatient readmission",
+          "identifier": "93",
+          "label": "Discharged/transferred to a psychiatric hospital or psychiatric part unit of a hospital with a planned acute care hospital inpatient readmission"
+        },
+        {
+          "code": "Discharge/transferred to a Critical Access Hospital (CAH) with a planned acute care hospital inpatient readmission",
+          "identifier": "94",
+          "label": "Discharge/transferred to a Critical Access Hospital (CAH) with a planned acute care hospital inpatient readmission"
+        },
+        {
+          "code": "Discharge/transfer to another type of healthcare institution not elsewhere defined in this list with a planned acute care hospital inpatient readmission",
+          "identifier": "95",
+          "label": "Discharge/transfer to another type of healthcare institution not elsewhere defined in this list with a planned acute care hospital inpatient readmission"
+        }
+      ]
+    },
+    {
+      "id": "dischargeYear",
+      "display_name": "Discharge Year",
+      "category": "time",
+      "dataset_field": "dischargeYear",
+      "description": "Calendar year of discharge (YYYY) present in annual throughput LOS extracts.",
+      "allowed_values": []
+    },
+    {
+      "id": "medicareId",
+      "display_name": "Medicare ID",
+      "category": "entity",
+      "dataset_field": "medicareId",
+      "description": "Facility Medicare ID used for peer benchmarking; display names sourced from dataset metadata when needed.",
+      "allowed_values": []
+    },
+    {
+      "id": "payerSegment",
+      "display_name": "Payer Segment",
+      "category": "coverage",
+      "dataset_field": "payerSegment",
+      "description": "Primary reimbursement coverage category captured on encounter billing records.",
+      "allowed_values": [
+        {
+          "code": "Auto Insurance",
+          "identifier": "6",
+          "label": "Auto Insurance"
+        },
+        {
+          "code": "Charity",
+          "identifier": "11",
+          "label": "Charity"
+        },
+        {
+          "code": "Commercial/Private",
+          "identifier": "1",
+          "label": "Commercial/Private"
+        },
+        {
+          "code": "County Medically Indigent Services",
+          "identifier": "10",
+          "label": "County Medically Indigent Services"
+        },
+        {
+          "code": "Medicaid",
+          "identifier": "2",
+          "label": "Medicaid"
+        },
+        {
+          "code": "Medicare",
+          "identifier": "3",
+          "label": "Medicare"
+        },
+        {
+          "code": "Military",
+          "identifier": "5",
+          "label": "Military"
+        },
+        {
+          "code": "Other",
+          "identifier": "14",
+          "label": "Other"
+        },
+        {
+          "code": "Research",
+          "identifier": "8",
+          "label": "Research"
+        },
+        {
+          "code": "Self-Pay - Cash in Full",
+          "identifier": "13",
+          "label": "Self-Pay - Cash in Full"
+        },
+        {
+          "code": "Self-Pay - Uninsured",
+          "identifier": "12",
+          "label": "Self-Pay - Uninsured"
+        },
+        {
+          "code": "State Assisted Healthcare",
+          "identifier": "4",
+          "label": "State Assisted Healthcare"
+        },
+        {
+          "code": "Title V Maternal & Child Health",
+          "identifier": "9",
+          "label": "Title V Maternal & Child Health"
+        },
+        {
+          "code": "Unknown",
+          "identifier": "15",
+          "label": "Unknown"
+        },
+        {
+          "code": "Workers Compensation",
+          "identifier": "7",
+          "label": "Workers Compensation"
+        }
+      ]
+    },
+    {
+      "id": "systemName",
+      "display_name": "Health System",
+      "category": "entity",
+      "dataset_field": "systemName",
+      "description": "Health system identifier for multi-facility organizations.",
+      "allowed_values": []
+    },
+    {
+      "id": "vizientServiceLine",
+      "display_name": "Vizient Service Line",
+      "category": "entity",
+      "dataset_field": "vizientServiceLine",
+      "description": "Vizient-defined service line applied to throughput LOS encounter aggregates.",
+      "allowed_values": [
+        {
+          "code": "Aftercare and Other Factors",
+          "identifier": "42",
+          "label": "Aftercare and Other Factors"
+        },
+        {
+          "code": "Behavioral Health",
+          "identifier": "47",
+          "label": "Behavioral Health"
+        },
+        {
+          "code": "Bone Marrow Transplant",
+          "identifier": "1",
+          "label": "Bone Marrow Transplant"
+        },
+        {
+          "code": "Burns",
+          "identifier": "2",
+          "label": "Burns"
+        },
+        {
+          "code": "Cardiac Surgery",
+          "identifier": "40",
+          "label": "Cardiac Surgery"
+        },
+        {
+          "code": "Cardiology",
+          "identifier": "3",
+          "label": "Cardiology"
+        },
+        {
+          "code": "Complications of Prior Care",
+          "identifier": "38",
+          "label": "Complications of Prior Care"
+        },
+        {
+          "code": "Dental/Oral Surgery",
+          "identifier": "5",
+          "label": "Dental/Oral Surgery"
+        },
+        {
+          "code": "Dermatology",
+          "identifier": "6",
+          "label": "Dermatology"
+        },
+        {
+          "code": "General Medicine",
+          "identifier": "15",
+          "label": "General Medicine"
+        },
+        {
+          "code": "General Surgery",
+          "identifier": "31",
+          "label": "General Surgery"
+        },
+        {
+          "code": "Gynecology",
+          "identifier": "8",
+          "label": "Gynecology"
+        },
+        {
+          "code": "HIV",
+          "identifier": "10",
+          "label": "HIV"
+        },
+        {
+          "code": "Neonatology",
+          "identifier": "16",
+          "label": "Neonatology"
+        },
+        {
+          "code": "Neurology",
+          "identifier": "17",
+          "label": "Neurology"
+        },
+        {
+          "code": "Neurosurgery",
+          "identifier": "18",
+          "label": "Neurosurgery"
+        },
+        {
+          "code": "Normal Newborns",
+          "identifier": "19",
+          "label": "Normal Newborns"
+        },
+        {
+          "code": "Obstetrics",
+          "identifier": "20",
+          "label": "Obstetrics"
+        },
+        {
+          "code": "Oncology",
+          "identifier": "45",
+          "label": "Oncology"
+        },
+        {
+          "code": "Ophthalmology",
+          "identifier": "21",
+          "label": "Ophthalmology"
+        },
+        {
+          "code": "Orthopedics",
+          "identifier": "22",
+          "label": "Orthopedics"
+        },
+        {
+          "code": "Otolaryngology",
+          "identifier": "23",
+          "label": "Otolaryngology"
+        },
+        {
+          "code": "Plastic Surgery",
+          "identifier": "25",
+          "label": "Plastic Surgery"
+        },
+        {
+          "code": "Psychiatry",
+          "identifier": "26",
+          "label": "Psychiatry"
+        },
+        {
+          "code": "Pulmonary/ Critical Care",
+          "identifier": "43",
+          "label": "Pulmonary/ Critical Care"
+        },
+        {
+          "code": "Rehabilitation",
+          "identifier": "27",
+          "label": "Rehabilitation"
+        },
+        {
+          "code": "Spinal Medical",
+          "identifier": "46",
+          "label": "Spinal Medical"
+        },
+        {
+          "code": "Spinal Surgery",
+          "identifier": "37",
+          "label": "Spinal Surgery"
+        },
+        {
+          "code": "Thoracic Surgery",
+          "identifier": "41",
+          "label": "Thoracic Surgery"
+        },
+        {
+          "code": "Transplant Services",
+          "identifier": "44",
+          "label": "Transplant Services"
+        },
+        {
+          "code": "Trauma",
+          "identifier": "32",
+          "label": "Trauma"
+        },
+        {
+          "code": "Ungroupable/Invalid",
+          "identifier": "33",
+          "label": "Ungroupable/Invalid"
+        },
+        {
+          "code": "Unassigned - Inpatient",
+          "identifier": "0",
+          "label": "Unassigned - Inpatient"
+        },
+        {
+          "code": "Unassigned - Non-Inpatient",
+          "identifier": "99",
+          "label": "Unassigned - Non-Inpatient"
+        },
+        {
+          "code": "Urology",
+          "identifier": "34",
+          "label": "Urology"
+        },
+        {
+          "code": "Vascular Surgery",
+          "identifier": "35",
+          "label": "Vascular Surgery"
+        }
+      ]
+    },
+    {
+      "id": "vizientSubServiceLine",
+      "display_name": "Vizient Sub-Service Line",
+      "category": "entity",
+      "dataset_field": "vizientSubServiceLine",
+      "description": "Vizient-defined sub-service line applied to throughput LOS encounter aggregates.",
+      "allowed_values": [
+        {
+          "code": "Aftercare and Other Factors - Aftercare and Other factors",
+          "identifier": "42z",
+          "label": "Aftercare and Other Factors - Aftercare and Other factors"
+        },
+        {
+          "code": "BMT - Allogeneic",
+          "identifier": "1a",
+          "label": "BMT - Allogeneic"
+        },
+        {
+          "code": "BMT - Autologous",
+          "identifier": "1b",
+          "label": "BMT - Autologous"
+        },
+        {
+          "code": "BMT - CAR-T Cell Immunotherapy",
+          "identifier": "1c",
+          "label": "BMT - CAR-T Cell Immunotherapy"
+        },
+        {
+          "code": "BMT - Complication of Prior BMT Transplant",
+          "identifier": "1z",
+          "label": "BMT - Complication of Prior BMT Transplant"
+        },
+        {
+          "code": "Behavioral Health - Attention Deficit & Hyperactivity",
+          "identifier": "47a",
+          "label": "Behavioral Health - Attention Deficit & Hyperactivity"
+        },
+        {
+          "code": "Behavioral Health - Autism Disorders",
+          "identifier": "47b",
+          "label": "Behavioral Health - Autism Disorders"
+        },
+        {
+          "code": "Behavioral Health - Eating Disorders",
+          "identifier": "47c",
+          "label": "Behavioral Health - Eating Disorders"
+        },
+        {
+          "code": "Behavioral Health - Learning & Neurodevelopmental",
+          "identifier": "47d",
+          "label": "Behavioral Health - Learning & Neurodevelopmental"
+        },
+        {
+          "code": "Behavioral Health - Mood Disorders",
+          "identifier": "47e",
+          "label": "Behavioral Health - Mood Disorders"
+        },
+        {
+          "code": "Behavioral Health - PTSD & Stress Related Disorders",
+          "identifier": "47h",
+          "label": "Behavioral Health - PTSD & Stress Related Disorders"
+        },
+        {
+          "code": "Behavioral Health - Personality, Anxiety & Other Disorders",
+          "identifier": "47f",
+          "label": "Behavioral Health - Personality, Anxiety & Other Disorders"
+        },
+        {
+          "code": "Behavioral Health - Psychosis",
+          "identifier": "47g",
+          "label": "Behavioral Health - Psychosis"
+        },
+        {
+          "code": "Behavioral Health - Substance Use Disorders",
+          "identifier": "47j",
+          "label": "Behavioral Health - Substance Use Disorders"
+        },
+        {
+          "code": "Burns - Burns",
+          "identifier": "2z",
+          "label": "Burns - Burns"
+        },
+        {
+          "code": "Cardiac Surgery - Cardiac Surgery",
+          "identifier": "40z",
+          "label": "Cardiac Surgery - Cardiac Surgery"
+        },
+        {
+          "code": "Cardiac Surgery- Endovascular Valve (retired 2022)",
+          "identifier": "40a",
+          "label": "Cardiac Surgery- Endovascular Valve (retired 2022)"
+        },
+        {
+          "code": "Cardiology - Acute Coronary Syndrome",
+          "identifier": "3d",
+          "label": "Cardiology - Acute Coronary Syndrome"
+        },
+        {
+          "code": "Cardiology - Benign Cardiac Neoplasm",
+          "identifier": "3q",
+          "label": "Cardiology - Benign Cardiac Neoplasm"
+        },
+        {
+          "code": "Cardiology - Cardiac Congenital Anomaly",
+          "identifier": "3e",
+          "label": "Cardiology - Cardiac Congenital Anomaly"
+        },
+        {
+          "code": "Cardiology - Cardiac Intervention",
+          "identifier": "3a",
+          "label": "Cardiology - Cardiac Intervention"
+        },
+        {
+          "code": "Cardiology - Cardiac Murmur",
+          "identifier": "3f",
+          "label": "Cardiology - Cardiac Murmur"
+        },
+        {
+          "code": "Cardiology - Cardiac Rhythm Management",
+          "identifier": "3c",
+          "label": "Cardiology - Cardiac Rhythm Management"
+        },
+        {
+          "code": "Cardiology - Cardiac Signs, Symptoms, Findings",
+          "identifier": "3g",
+          "label": "Cardiology - Cardiac Signs, Symptoms, Findings"
+        },
+        {
+          "code": "Cardiology - Cardiomyopathy",
+          "identifier": "3h",
+          "label": "Cardiology - Cardiomyopathy"
+        },
+        {
+          "code": "Cardiology - Carditis & Endocarditis",
+          "identifier": "3i",
+          "label": "Cardiology - Carditis & Endocarditis"
+        },
+        {
+          "code": "Cardiology - Coronary Heart Disease & Angina",
+          "identifier": "3j",
+          "label": "Cardiology - Coronary Heart Disease & Angina"
+        },
+        {
+          "code": "Cardiology - Dysrhythmia",
+          "identifier": "3k",
+          "label": "Cardiology - Dysrhythmia"
+        },
+        {
+          "code": "Cardiology - Heart Failure",
+          "identifier": "3m",
+          "label": "Cardiology - Heart Failure"
+        },
+        {
+          "code": "Cardiology - Hypertension Crisis",
+          "identifier": "3s",
+          "label": "Cardiology - Hypertension Crisis"
+        },
+        {
+          "code": "Cardiology - Myocardial Infarction",
+          "identifier": "3r",
+          "label": "Cardiology - Myocardial Infarction"
+        },
+        {
+          "code": "Cardiology - Non-Invasive Cardiology(retired 2023)",
+          "identifier": "3b",
+          "label": "Cardiology - Non-Invasive Cardiology(retired 2023)"
+        },
+        {
+          "code": "Cardiology - Pulmonary Hypertension & Related",
+          "identifier": "3n",
+          "label": "Cardiology - Pulmonary Hypertension & Related"
+        },
+        {
+          "code": "Cardiology - Valvular",
+          "identifier": "3p",
+          "label": "Cardiology - Valvular"
+        },
+        {
+          "code": "Complications of Prior Care - Complications of Prior Care",
+          "identifier": "38z",
+          "label": "Complications of Prior Care - Complications of Prior Care"
+        },
+        {
+          "code": "Dental/Oral Surgery - Dental/ Oral Surgery",
+          "identifier": "5z",
+          "label": "Dental/Oral Surgery - Dental/ Oral Surgery"
+        },
+        {
+          "code": "Dermatology - Dermatology",
+          "identifier": "6z",
+          "label": "Dermatology - Dermatology"
+        },
+        {
+          "code": "General Medicine - Blood Disorders",
+          "identifier": "15n",
+          "label": "General Medicine - Blood Disorders"
+        },
+        {
+          "code": "General Medicine - COVID-19",
+          "identifier": "15q",
+          "label": "General Medicine - COVID-19"
+        },
+        {
+          "code": "General Medicine - Circulatory Disorders",
+          "identifier": "15c",
+          "label": "General Medicine - Circulatory Disorders"
+        },
+        {
+          "code": "General Medicine - Endocrinology",
+          "identifier": "15f",
+          "label": "General Medicine - Endocrinology"
+        },
+        {
+          "code": "General Medicine - Gastroenterology",
+          "identifier": "15d",
+          "label": "General Medicine - Gastroenterology"
+        },
+        {
+          "code": "General Medicine - Heart Failure (2018 only)",
+          "identifier": "15b",
+          "label": "General Medicine - Heart Failure (2018 only)"
+        },
+        {
+          "code": "General Medicine - Hepatobiliary",
+          "identifier": "15e",
+          "label": "General Medicine - Hepatobiliary"
+        },
+        {
+          "code": "General Medicine - Hypertension",
+          "identifier": "15h",
+          "label": "General Medicine - Hypertension"
+        },
+        {
+          "code": "General Medicine - Local Infections",
+          "identifier": "15a",
+          "label": "General Medicine - Local Infections"
+        },
+        {
+          "code": "General Medicine - Musculoskeletal Disorders",
+          "identifier": "15k",
+          "label": "General Medicine - Musculoskeletal Disorders"
+        },
+        {
+          "code": "General Medicine - Nephrology",
+          "identifier": "15g",
+          "label": "General Medicine - Nephrology"
+        },
+        {
+          "code": "General Medicine - Other",
+          "identifier": "15j",
+          "label": "General Medicine - Other"
+        },
+        {
+          "code": "General Medicine - Respiratory Disorders",
+          "identifier": "15i",
+          "label": "General Medicine - Respiratory Disorders"
+        },
+        {
+          "code": "General Medicine - Sepsis and Infectious Disease",
+          "identifier": "15p",
+          "label": "General Medicine - Sepsis and Infectious Disease"
+        },
+        {
+          "code": "General Surgery - Endocrine and Nutritional",
+          "identifier": "31f",
+          "label": "General Surgery - Endocrine and Nutritional"
+        },
+        {
+          "code": "General Surgery - Gastrointestinal",
+          "identifier": "31d",
+          "label": "General Surgery - Gastrointestinal"
+        },
+        {
+          "code": "General Surgery - Gender Affirmation",
+          "identifier": "31k",
+          "label": "General Surgery - Gender Affirmation"
+        },
+        {
+          "code": "General Surgery - Hepatobiliary",
+          "identifier": "31e",
+          "label": "General Surgery - Hepatobiliary"
+        },
+        {
+          "code": "General Surgery - Infection",
+          "identifier": "31j",
+          "label": "General Surgery - Infection"
+        },
+        {
+          "code": "General Surgery - Other",
+          "identifier": "31h",
+          "label": "General Surgery - Other"
+        },
+        {
+          "code": "General Surgery - Skin and Subcutaneous Tissue",
+          "identifier": "31a",
+          "label": "General Surgery - Skin and Subcutaneous Tissue"
+        },
+        {
+          "code": "General Surgery - Spleen, Lymph, and other Blood Organs",
+          "identifier": "31g",
+          "label": "General Surgery - Spleen, Lymph, and other Blood Organs"
+        },
+        {
+          "code": "Gynecology - Gynecology",
+          "identifier": "8z",
+          "label": "Gynecology - Gynecology"
+        },
+        {
+          "code": "HIV - HIV",
+          "identifier": "10z",
+          "label": "HIV - HIV"
+        },
+        {
+          "code": "Neonatology - Neonatology",
+          "identifier": "16z",
+          "label": "Neonatology - Neonatology"
+        },
+        {
+          "code": "Neurology - Abnormal Gait & Movement",
+          "identifier": "17r",
+          "label": "Neurology - Abnormal Gait & Movement"
+        },
+        {
+          "code": "Neurology - Aftercare-Neurologic",
+          "identifier": "17s",
+          "label": "Neurology - Aftercare-Neurologic"
+        },
+        {
+          "code": "Neurology - Aftercare-Stroke",
+          "identifier": "17t",
+          "label": "Neurology - Aftercare-Stroke"
+        },
+        {
+          "code": "Neurology - Altered Mental Status (retired 2022)",
+          "identifier": "17g",
+          "label": "Neurology - Altered Mental Status (retired 2022)"
+        },
+        {
+          "code": "Neurology - Benign Neoplasm",
+          "identifier": "17u",
+          "label": "Neurology - Benign Neoplasm"
+        },
+        {
+          "code": "Neurology - Brain Injury (non-traumatic) & Encephalopathy",
+          "identifier": "17v",
+          "label": "Neurology - Brain Injury (non-traumatic) & Encephalopathy"
+        },
+        {
+          "code": "Neurology - CNS Infections",
+          "identifier": "17a",
+          "label": "Neurology - CNS Infections"
+        },
+        {
+          "code": "Neurology - Cerebral Palsy & Plegia",
+          "identifier": "17w",
+          "label": "Neurology - Cerebral Palsy & Plegia"
+        },
+        {
+          "code": "Neurology - Cerebral/Precerebral Artery Stenosis & Occlusion (retired 2022)",
+          "identifier": "17q",
+          "label": "Neurology - Cerebral/Precerebral Artery Stenosis & Occlusion (retired 2022)"
+        },
+        {
+          "code": "Neurology - Cerebrovascular Disorders (excluding stroke) (retired 2022)",
+          "identifier": "17e",
+          "label": "Neurology - Cerebrovascular Disorders (excluding stroke) (retired 2022)"
+        },
+        {
+          "code": "Neurology - Complications of Prior Care",
+          "identifier": "17x",
+          "label": "Neurology - Complications of Prior Care"
+        },
+        {
+          "code": "Neurology - Concussion & Unspecified Head Injury",
+          "identifier": "17y",
+          "label": "Neurology - Concussion & Unspecified Head Injury"
+        },
+        {
+          "code": "Neurology - Congenital Anomaly-Neural Tube",
+          "identifier": "17z",
+          "label": "Neurology - Congenital Anomaly-Neural Tube"
+        },
+        {
+          "code": "Neurology - Congenital Anomaly-Non-neural Tube",
+          "identifier": "17aa",
+          "label": "Neurology - Congenital Anomaly-Non-neural Tube"
+        },
+        {
+          "code": "Neurology - Degenerative Nervous Syst Disorders (retired 2022)",
+          "identifier": "17b",
+          "label": "Neurology - Degenerative Nervous Syst Disorders (retired 2022)"
+        },
+        {
+          "code": "Neurology - Dementia",
+          "identifier": "17bb",
+          "label": "Neurology - Dementia"
+        },
+        {
+          "code": "Neurology - Epilepsy & Seizure",
+          "identifier": "17h",
+          "label": "Neurology - Epilepsy & Seizure"
+        },
+        {
+          "code": "Neurology - Headache & Migraine",
+          "identifier": "17i",
+          "label": "Neurology - Headache & Migraine"
+        },
+        {
+          "code": "Neurology - Hemorrhagic Stroke (retired 2022)",
+          "identifier": "17d",
+          "label": "Neurology - Hemorrhagic Stroke (retired 2022)"
+        },
+        {
+          "code": "Neurology - Hydrocephalus & Meningeal",
+          "identifier": "17cc",
+          "label": "Neurology - Hydrocephalus & Meningeal"
+        },
+        {
+          "code": "Neurology - Multiple Sclerosis & Demyelinating",
+          "identifier": "17dd",
+          "label": "Neurology - Multiple Sclerosis & Demyelinating"
+        },
+        {
+          "code": "Neurology - Nerve Injury-Traumatic",
+          "identifier": "17qq",
+          "label": "Neurology - Nerve Injury-Traumatic"
+        },
+        {
+          "code": "Neurology - Neurologic Pain",
+          "identifier": "17ee",
+          "label": "Neurology - Neurologic Pain"
+        },
+        {
+          "code": "Neurology - Neuromuscular & Neurodegenerative",
+          "identifier": "17ff",
+          "label": "Neurology - Neuromuscular & Neurodegenerative"
+        },
+        {
+          "code": "Neurology - Neuropathy-Exclude Median Nerve",
+          "identifier": "17gg",
+          "label": "Neurology - Neuropathy-Exclude Median Nerve"
+        },
+        {
+          "code": "Neurology - Neuropathy-Median Nerve",
+          "identifier": "17hh",
+          "label": "Neurology - Neuropathy-Median Nerve"
+        },
+        {
+          "code": "Neurology - Neurovascular",
+          "identifier": "17ii",
+          "label": "Neurology - Neurovascular"
+        },
+        {
+          "code": "Neurology - Other",
+          "identifier": "17j",
+          "label": "Neurology - Other"
+        },
+        {
+          "code": "Neurology - Parkinson's Disease & Spectrum",
+          "identifier": "17jj",
+          "label": "Neurology - Parkinson's Disease & Spectrum"
+        },
+        {
+          "code": "Neurology - Signs, Symptoms, Findings",
+          "identifier": "17kk",
+          "label": "Neurology - Signs, Symptoms, Findings"
+        },
+        {
+          "code": "Neurology - Skull Fracture & Traumatic Brain Injury",
+          "identifier": "17mm",
+          "label": "Neurology - Skull Fracture & Traumatic Brain Injury"
+        },
+        {
+          "code": "Neurology - Sleep Disorders (excl. Obstructive Apneas)",
+          "identifier": "17nn",
+          "label": "Neurology - Sleep Disorders (excl. Obstructive Apneas)"
+        },
+        {
+          "code": "Neurology - Stroke-Hemorrhagic-Intracerebral",
+          "identifier": "17n",
+          "label": "Neurology - Stroke-Hemorrhagic-Intracerebral"
+        },
+        {
+          "code": "Neurology - Stroke-Hemorrhagic-Subarachnoid",
+          "identifier": "17m",
+          "label": "Neurology - Stroke-Hemorrhagic-Subarachnoid"
+        },
+        {
+          "code": "Neurology - Stroke-Hemorrhagic-Subdural",
+          "identifier": "17p",
+          "label": "Neurology - Stroke-Hemorrhagic-Subdural"
+        },
+        {
+          "code": "Neurology - Stroke-Ischemic",
+          "identifier": "17c",
+          "label": "Neurology - Stroke-Ischemic"
+        },
+        {
+          "code": "Neurology - Transient Altered Mental Status",
+          "identifier": "17pp",
+          "label": "Neurology - Transient Altered Mental Status"
+        },
+        {
+          "code": "Neurology - Transient Ischemic Attack",
+          "identifier": "17k",
+          "label": "Neurology - Transient Ischemic Attack"
+        },
+        {
+          "code": "Neurosurgery - Neurosurgery",
+          "identifier": "18z",
+          "label": "Neurosurgery - Neurosurgery"
+        },
+        {
+          "code": "Neurosurgery - Open Procedure",
+          "identifier": "18a",
+          "label": "Neurosurgery - Open Procedure"
+        },
+        {
+          "code": "Neurosurgery - Percutaneous Procedure",
+          "identifier": "18b",
+          "label": "Neurosurgery - Percutaneous Procedure"
+        },
+        {
+          "code": "Normal Newborns - Normal Newborns",
+          "identifier": "19z",
+          "label": "Normal Newborns - Normal Newborns"
+        },
+        {
+          "code": "Obstetrics - Delivery",
+          "identifier": "20a",
+          "label": "Obstetrics - Delivery"
+        },
+        {
+          "code": "Obstetrics - Ectopic & Abortive Outcomes",
+          "identifier": "20d",
+          "label": "Obstetrics - Ectopic & Abortive Outcomes"
+        },
+        {
+          "code": "Obstetrics - Obstetrics",
+          "identifier": "20z",
+          "label": "Obstetrics - Obstetrics"
+        },
+        {
+          "code": "Obstetrics - Postpartum",
+          "identifier": "20b",
+          "label": "Obstetrics - Postpartum"
+        },
+        {
+          "code": "Obstetrics - Prenatal",
+          "identifier": "20c",
+          "label": "Obstetrics - Prenatal"
+        },
+        {
+          "code": "Oncology - Breast",
+          "identifier": "45a",
+          "label": "Oncology - Breast"
+        },
+        {
+          "code": "Oncology - Dermatology (retired 2022)",
+          "identifier": "45b",
+          "label": "Oncology - Dermatology (retired 2022)"
+        },
+        {
+          "code": "Oncology - Dermatology - Melanoma",
+          "identifier": "45bb",
+          "label": "Oncology - Dermatology - Melanoma"
+        },
+        {
+          "code": "Oncology - Dermatology-Skin (excl. Melanoma)",
+          "identifier": "45ba",
+          "label": "Oncology - Dermatology-Skin (excl. Melanoma)"
+        },
+        {
+          "code": "Oncology - ENT/Oral (retired 2021)",
+          "identifier": "45d",
+          "label": "Oncology - ENT/Oral (retired 2021)"
+        },
+        {
+          "code": "Oncology - Endocrine (retired 2022)",
+          "identifier": "45c",
+          "label": "Oncology - Endocrine (retired 2022)"
+        },
+        {
+          "code": "Oncology - Endocrine - Neuroblastoma & Adrenal",
+          "identifier": "45ca",
+          "label": "Oncology - Endocrine - Neuroblastoma & Adrenal"
+        },
+        {
+          "code": "Oncology - Endocrine - Thyroid",
+          "identifier": "45cb",
+          "label": "Oncology - Endocrine - Thyroid"
+        },
+        {
+          "code": "Oncology - Eye",
+          "identifier": "45s",
+          "label": "Oncology - Eye"
+        },
+        {
+          "code": "Oncology - Female - Cervical & Other",
+          "identifier": "45gc",
+          "label": "Oncology - Female - Cervical & Other"
+        },
+        {
+          "code": "Oncology - Female - Ovarian",
+          "identifier": "45ga",
+          "label": "Oncology - Female - Ovarian"
+        },
+        {
+          "code": "Oncology - Female - Uterine & Endometrial",
+          "identifier": "45gb",
+          "label": "Oncology - Female - Uterine & Endometrial"
+        },
+        {
+          "code": "Oncology - GI - Colorectal & Anal",
+          "identifier": "45ea",
+          "label": "Oncology - GI - Colorectal & Anal"
+        },
+        {
+          "code": "Oncology - GI - Esophageal & Stomach",
+          "identifier": "45ee",
+          "label": "Oncology - GI - Esophageal & Stomach"
+        },
+        {
+          "code": "Oncology - GI - Hepatobilliary",
+          "identifier": "45eb",
+          "label": "Oncology - GI - Hepatobilliary"
+        },
+        {
+          "code": "Oncology - GI - Pancreatic",
+          "identifier": "45ec",
+          "label": "Oncology - GI - Pancreatic"
+        },
+        {
+          "code": "Oncology - GI - Small Intestine & Peritoneal",
+          "identifier": "45ed",
+          "label": "Oncology - GI - Small Intestine & Peritoneal"
+        },
+        {
+          "code": "Oncology - Gastroenterology (retired 2021)",
+          "identifier": "45e",
+          "label": "Oncology - Gastroenterology (retired 2021)"
+        },
+        {
+          "code": "Oncology - Genitourinary (retired 2021)",
+          "identifier": "45f",
+          "label": "Oncology - Genitourinary (retired 2021)"
+        },
+        {
+          "code": "Oncology - Gynecologic (retired 2021)",
+          "identifier": "45g",
+          "label": "Oncology - Gynecologic (retired 2021)"
+        },
+        {
+          "code": "Oncology - Leukemia (retired 2021)",
+          "identifier": "45h",
+          "label": "Oncology - Leukemia (retired 2021)"
+        },
+        {
+          "code": "Oncology - Leukemia - Lymphoid",
+          "identifier": "45ha",
+          "label": "Oncology - Leukemia - Lymphoid"
+        },
+        {
+          "code": "Oncology - Leukemia - Multiple Myeloma",
+          "identifier": "45hc",
+          "label": "Oncology - Leukemia - Multiple Myeloma"
+        },
+        {
+          "code": "Oncology - Leukemia - Myelodysplastic & Other",
+          "identifier": "45hd",
+          "label": "Oncology - Leukemia - Myelodysplastic & Other"
+        },
+        {
+          "code": "Oncology - Leukemia - Myeloid",
+          "identifier": "45hb",
+          "label": "Oncology - Leukemia - Myeloid"
+        },
+        {
+          "code": "Oncology - Lymphoma",
+          "identifier": "45j",
+          "label": "Oncology - Lymphoma"
+        },
+        {
+          "code": "Oncology - Male - Prostate",
+          "identifier": "45fd",
+          "label": "Oncology - Male - Prostate"
+        },
+        {
+          "code": "Oncology - Male - Testicular & Other",
+          "identifier": "45fe",
+          "label": "Oncology - Male - Testicular & Other"
+        },
+        {
+          "code": "Oncology - Musculoskeletal (retired 2021)",
+          "identifier": "45k",
+          "label": "Oncology - Musculoskeletal (retired 2021)"
+        },
+        {
+          "code": "Oncology - Myeloma (retired 2021)",
+          "identifier": "45m",
+          "label": "Oncology - Myeloma (retired 2021)"
+        },
+        {
+          "code": "Oncology - Neuro",
+          "identifier": "45r",
+          "label": "Oncology - Neuro"
+        },
+        {
+          "code": "Oncology - Neuro/Eye (2018 only)",
+          "identifier": "45n",
+          "label": "Oncology - Neuro/Eye (2018 only)"
+        },
+        {
+          "code": "Oncology - Oropharyngeal & Craniofacial",
+          "identifier": "45da",
+          "label": "Oncology - Oropharyngeal & Craniofacial"
+        },
+        {
+          "code": "Oncology - Sarcoma",
+          "identifier": "45ka",
+          "label": "Oncology - Sarcoma"
+        },
+        {
+          "code": "Oncology - Skeletal",
+          "identifier": "45kb",
+          "label": "Oncology - Skeletal"
+        },
+        {
+          "code": "Oncology - Thoracic (retired 2021)",
+          "identifier": "45p",
+          "label": "Oncology - Thoracic (retired 2021)"
+        },
+        {
+          "code": "Oncology - Thoracic - Cardiac & Other",
+          "identifier": "45pb",
+          "label": "Oncology - Thoracic - Cardiac & Other"
+        },
+        {
+          "code": "Oncology - Thoracic - Lung",
+          "identifier": "45pa",
+          "label": "Oncology - Thoracic - Lung"
+        },
+        {
+          "code": "Oncology - Unspecified",
+          "identifier": "45q",
+          "label": "Oncology - Unspecified"
+        },
+        {
+          "code": "Oncology - Urinary - Bladder",
+          "identifier": "45fa",
+          "label": "Oncology - Urinary - Bladder"
+        },
+        {
+          "code": "Oncology - Urinary - Renal",
+          "identifier": "45fb",
+          "label": "Oncology - Urinary - Renal"
+        },
+        {
+          "code": "Ophthalmology - Ophthalmology",
+          "identifier": "21z",
+          "label": "Ophthalmology - Ophthalmology"
+        },
+        {
+          "code": "Orthopedics -  Foot/Ankle, Other",
+          "identifier": "22f",
+          "label": "Orthopedics -  Foot/Ankle, Other"
+        },
+        {
+          "code": "Orthopedics - Amputations",
+          "identifier": "22c",
+          "label": "Orthopedics - Amputations"
+        },
+        {
+          "code": "Orthopedics - Foot/Ankle, Replacement/Revision",
+          "identifier": "22k",
+          "label": "Orthopedics - Foot/Ankle, Replacement/Revision"
+        },
+        {
+          "code": "Orthopedics - Hip, Other",
+          "identifier": "22a",
+          "label": "Orthopedics - Hip, Other"
+        },
+        {
+          "code": "Orthopedics - Hip, Replacement/Revision",
+          "identifier": "22h",
+          "label": "Orthopedics - Hip, Replacement/Revision"
+        },
+        {
+          "code": "Orthopedics - Knee, Other",
+          "identifier": "22b",
+          "label": "Orthopedics - Knee, Other"
+        },
+        {
+          "code": "Orthopedics - Knee, Replacement/Revision",
+          "identifier": "22j",
+          "label": "Orthopedics - Knee, Replacement/Revision"
+        },
+        {
+          "code": "Orthopedics - Other",
+          "identifier": "22g",
+          "label": "Orthopedics - Other"
+        },
+        {
+          "code": "Orthopedics - Upper Extremity, Other",
+          "identifier": "22d",
+          "label": "Orthopedics - Upper Extremity, Other"
+        },
+        {
+          "code": "Orthopedics - Upper Extremity, Replacement/Revision",
+          "identifier": "22m",
+          "label": "Orthopedics - Upper Extremity, Replacement/Revision"
+        },
+        {
+          "code": "Orthopedics- Podiatry",
+          "identifier": "22n",
+          "label": "Orthopedics- Podiatry"
+        },
+        {
+          "code": "Otolaryngology - Otolaryngology",
+          "identifier": "23z",
+          "label": "Otolaryngology - Otolaryngology"
+        },
+        {
+          "code": "Plastic Surgery - Plastic Surgery",
+          "identifier": "25z",
+          "label": "Plastic Surgery - Plastic Surgery"
+        },
+        {
+          "code": "Psychiatry - General Psychiatry(retired 2023)",
+          "identifier": "26a",
+          "label": "Psychiatry - General Psychiatry(retired 2023)"
+        },
+        {
+          "code": "Psychiatry - Substance Abuse(retired 2023)",
+          "identifier": "26b",
+          "label": "Psychiatry - Substance Abuse(retired 2023)"
+        },
+        {
+          "code": "Pulmonary/ Critical Care - COVID-19",
+          "identifier": "43a",
+          "label": "Pulmonary/ Critical Care - COVID-19"
+        },
+        {
+          "code": "Pulmonary/ Critical Care - Pulmonary/ Critical Care",
+          "identifier": "43z",
+          "label": "Pulmonary/ Critical Care - Pulmonary/ Critical Care"
+        },
+        {
+          "code": "Rehabilitation - Rehabilitation",
+          "identifier": "27z",
+          "label": "Rehabilitation - Rehabilitation"
+        },
+        {
+          "code": "Spinal Medical - Spinal Cord Injury-Non-Acute",
+          "identifier": "46a",
+          "label": "Spinal Medical - Spinal Cord Injury-Non-Acute"
+        },
+        {
+          "code": "Spinal Surgery - Cervical Spine, Fusion",
+          "identifier": "37d",
+          "label": "Spinal Surgery - Cervical Spine, Fusion"
+        },
+        {
+          "code": "Spinal Surgery - Cervical Spine, Non-Fusion",
+          "identifier": "37e",
+          "label": "Spinal Surgery - Cervical Spine, Non-Fusion"
+        },
+        {
+          "code": "Spinal Surgery - Dorsal/Lumbar/Sacral Spine, Fusion",
+          "identifier": "37f",
+          "label": "Spinal Surgery - Dorsal/Lumbar/Sacral Spine, Fusion"
+        },
+        {
+          "code": "Spinal Surgery - Dorsal/Lumbar/Sacral Spine, Non-Fusion",
+          "identifier": "37g",
+          "label": "Spinal Surgery - Dorsal/Lumbar/Sacral Spine, Non-Fusion"
+        },
+        {
+          "code": "Spinal Surgery - Other",
+          "identifier": "37c",
+          "label": "Spinal Surgery - Other"
+        },
+        {
+          "code": "Thoracic Surgery - Thoracic Surgery",
+          "identifier": "41z",
+          "label": "Thoracic Surgery - Thoracic Surgery"
+        },
+        {
+          "code": "Transplant Services - Heart Assist System / VAD",
+          "identifier": "44e",
+          "label": "Transplant Services - Heart Assist System / VAD"
+        },
+        {
+          "code": "Transplant Services - Kidney/Pancreas",
+          "identifier": "44b",
+          "label": "Transplant Services - Kidney/Pancreas"
+        },
+        {
+          "code": "Transplant Services - Liver",
+          "identifier": "44c",
+          "label": "Transplant Services - Liver"
+        },
+        {
+          "code": "Transplant Services - Lung",
+          "identifier": "44d",
+          "label": "Transplant Services - Lung"
+        },
+        {
+          "code": "Transplant Services- Complication of Prior Heart Transplant",
+          "identifier": "44f",
+          "label": "Transplant Services- Complication of Prior Heart Transplant"
+        },
+        {
+          "code": "Transplant Services- Complication of Prior Kidney/Pancreas Transplant",
+          "identifier": "44g",
+          "label": "Transplant Services- Complication of Prior Kidney/Pancreas Transplant"
+        },
+        {
+          "code": "Transplant Services- Complication of Prior Liver Transplant",
+          "identifier": "44h",
+          "label": "Transplant Services- Complication of Prior Liver Transplant"
+        },
+        {
+          "code": "Transplant Services- Complication of Prior Lung Transplant",
+          "identifier": "44j",
+          "label": "Transplant Services- Complication of Prior Lung Transplant"
+        },
+        {
+          "code": "Transplant Services- Heart Transplant",
+          "identifier": "44a",
+          "label": "Transplant Services- Heart Transplant"
+        },
+        {
+          "code": "Trauma - Neurology, Concussion & Unspecified Head Injury",
+          "identifier": "32a",
+          "label": "Trauma - Neurology, Concussion & Unspecified Head Injury"
+        },
+        {
+          "code": "Trauma - Neurology, Nerve Injury",
+          "identifier": "32b",
+          "label": "Trauma - Neurology, Nerve Injury"
+        },
+        {
+          "code": "Trauma - Neurology, Skull Fracture & Traumatic Brain Injury",
+          "identifier": "32c",
+          "label": "Trauma - Neurology, Skull Fracture & Traumatic Brain Injury"
+        },
+        {
+          "code": "Trauma - Trauma",
+          "identifier": "32z",
+          "label": "Trauma - Trauma"
+        },
+        {
+          "code": "Unassigned - Inpatient",
+          "identifier": "0",
+          "label": "Unassigned - Inpatient"
+        },
+        {
+          "code": "Unassigned - Non-Inpatient",
+          "identifier": "99",
+          "label": "Unassigned - Non-Inpatient"
+        },
+        {
+          "code": "Ungroupable/Invalid - Ungroupable/Invalid",
+          "identifier": "33z",
+          "label": "Ungroupable/Invalid - Ungroupable/Invalid"
+        },
+        {
+          "code": "Urology - Urology",
+          "identifier": "34z",
+          "label": "Urology - Urology"
+        },
+        {
+          "code": "Vascular Surgery - Vascular Surgery",
+          "identifier": "35z",
+          "label": "Vascular Surgery - Vascular Surgery"
+        }
+      ]
+    }
+  ],
+  "group_by_sets": [
+    {
+      "id": "facility_admission_source",
+      "description": "Facility with admission source segmentation.",
+      "allowed_metric_method_sets": [
+        "aggregated_time_period",
+        "trending_time_period"
+      ],
+      "allowed_dimensions": [
+        [
+          "medicareId",
+          "admissionSource"
+        ]
+      ],
+      "optional_time_dimensions": [
+        "dischargeYear",
+        "dischargeQuarter",
+        "dischargeMonth"
+      ]
+    },
+    {
+      "id": "facility_admission_status",
+      "description": "Facility with admission status segmentation.",
+      "allowed_metric_method_sets": [
+        "aggregated_time_period",
+        "trending_time_period"
+      ],
+      "allowed_dimensions": [
+        [
+          "medicareId",
+          "admissionStatus"
+        ]
+      ],
+      "optional_time_dimensions": [
+        "dischargeYear",
+        "dischargeQuarter",
+        "dischargeMonth"
+      ]
+    },
+    {
+      "id": "facility_base",
+      "description": "Facility-only aggregation.",
+      "allowed_metric_method_sets": [
+        "aggregated_time_period",
+        "trending_time_period"
+      ],
+      "allowed_dimensions": [
+        [
+          "medicareId"
+        ]
+      ],
+      "optional_time_dimensions": [
+        "dischargeYear",
+        "dischargeQuarter",
+        "dischargeMonth"
+      ]
+    },
+    {
+      "id": "facility_discharge_status",
+      "description": "Facility with discharge status segmentation.",
+      "allowed_metric_method_sets": [
+        "aggregated_time_period",
+        "trending_time_period"
+      ],
+      "allowed_dimensions": [
+        [
+          "medicareId",
+          "dischargeStatus"
+        ]
+      ],
+      "optional_time_dimensions": [
+        "dischargeYear",
+        "dischargeQuarter",
+        "dischargeMonth"
+      ]
+    },
+    {
+      "id": "facility_payer_segment",
+      "description": "Facility with payer segment segmentation.",
+      "allowed_metric_method_sets": [
+        "aggregated_time_period",
+        "trending_time_period"
+      ],
+      "allowed_dimensions": [
+        [
+          "medicareId",
+          "payerSegment"
+        ]
+      ],
+      "optional_time_dimensions": [
+        "dischargeYear",
+        "dischargeQuarter",
+        "dischargeMonth"
+      ]
+    },
+    {
+      "id": "facility_service_line",
+      "description": "Facility with Vizient service line segmentation.",
+      "allowed_metric_method_sets": [
+        "aggregated_time_period",
+        "trending_time_period"
+      ],
+      "allowed_dimensions": [
+        [
+          "medicareId",
+          "vizientServiceLine"
+        ]
+      ],
+      "optional_time_dimensions": [
+        "dischargeYear",
+        "dischargeQuarter",
+        "dischargeMonth"
+      ]
+    },
+    {
+      "id": "facility_service_line_admission_source",
+      "description": "Facility with Vizient service line and admission source segmentation.",
+      "allowed_metric_method_sets": [
+        "aggregated_time_period",
+        "trending_time_period"
+      ],
+      "allowed_dimensions": [
+        [
+          "medicareId",
+          "vizientServiceLine",
+          "admissionSource"
+        ]
+      ],
+      "optional_time_dimensions": [
+        "dischargeYear",
+        "dischargeQuarter",
+        "dischargeMonth"
+      ]
+    },
+    {
+      "id": "facility_service_line_discharge_status",
+      "description": "Facility with Vizient service line and discharge status segmentation.",
+      "allowed_metric_method_sets": [
+        "aggregated_time_period",
+        "trending_time_period"
+      ],
+      "allowed_dimensions": [
+        [
+          "medicareId",
+          "vizientServiceLine",
+          "dischargeStatus"
+        ]
+      ],
+      "optional_time_dimensions": [
+        "dischargeYear",
+        "dischargeQuarter",
+        "dischargeMonth"
+      ]
+    },
+    {
+      "id": "facility_service_line_sub_service_line",
+      "description": "Facility with Vizient service line and sub-service line segmentation.",
+      "allowed_metric_method_sets": [
+        "aggregated_time_period",
+        "trending_time_period"
+      ],
+      "allowed_dimensions": [
+        [
+          "medicareId",
+          "vizientServiceLine",
+          "vizientSubServiceLine"
+        ]
+      ],
+      "optional_time_dimensions": [
+        "dischargeYear",
+        "dischargeQuarter",
+        "dischargeMonth"
+      ]
+    },
+    {
+      "id": "facility_sub_service_line",
+      "description": "Facility with Vizient sub-service line segmentation.",
+      "allowed_metric_method_sets": [
+        "aggregated_time_period",
+        "trending_time_period"
+      ],
+      "allowed_dimensions": [
+        [
+          "medicareId",
+          "vizientSubServiceLine"
+        ]
+      ],
+      "optional_time_dimensions": [
+        "dischargeYear",
+        "dischargeQuarter",
+        "dischargeMonth"
+      ]
+    }
+  ]
+}

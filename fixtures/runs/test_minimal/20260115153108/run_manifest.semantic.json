@@ -1,0 +1,8 @@
+{
+  "run_id": "20260115153108",
+  "graph_name": "test_minimal",
+  "requirements_path": "/home/ubuntu/repos/project-needle/fixtures/requirements/test_minimal.md",
+  "taxonomy_hash": "2d741eb3bda34e5f",
+  "generated_at": "2026-01-15T21:36:35.427810+00:00",
+  "metadata_bundle_version": "1.0.0"
+}

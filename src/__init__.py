@@ -1,0 +1,1 @@
+"""Quality Compass Backend API."""

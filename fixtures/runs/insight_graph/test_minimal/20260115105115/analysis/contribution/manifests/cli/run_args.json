@@ -1,0 +1,28 @@
+{
+  "command": "python -m analytics.contribution.cli compute --run-dir /data/runs/insight_graph/test_minimal/20260115105115 --output-format jsonl --workers 4",
+  "generated_at": "2026-01-15T16:55:53.133146+00:00",
+  "run_directory": "/data/runs/insight_graph/test_minimal/20260115105115",
+  "artifacts_dir": "/data/runs/insight_graph/test_minimal/20260115105115/analysis/contribution",
+  "metrics": [
+    "losIndex",
+    "simple_zscore",
+    "robust_zscore",
+    "losVarianceDays",
+    "meanIcuDaysIcuFile",
+    "pctIcuEncountersIcuFile",
+    "pctIcuEncountersEncFile",
+    "pctAllReturnsToIcu"
+  ],
+  "output_formats": [
+    "jsonl"
+  ],
+  "parent_node_ids": [
+    "losIndex__medicareId__aggregate_time_period",
+    "losIndex__medicareId__dischargeMonth",
+    "losIndex__medicareId_dischargeStatus__aggregate_time_period",
+    "losIndex__medicareId_dischargeStatus__dischargeMonth",
+    "losIndex__medicareId_vizientServiceLine__aggregate_time_period",
+    "losIndex__medicareId_vizientServiceLine__dischargeMonth"
+  ],
+  "parallel_workers": 4
+}

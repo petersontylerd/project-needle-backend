@@ -1,0 +1,29 @@
+digraph insight_graph {
+  rankdir=LR;
+  graph [ranksep=1.4, nodesep=1.0, pad="0.4", splines=true];
+  node [margin="0.3,0.2"];
+  edge [minlen=2, labeldistance=2.0];
+  "losIndex__medicareId_vizientServiceLine__dischargeMonth" [shape="box", style="rounded,filled", fillcolor="#FFFFFF", color="#696969", fontcolor="#696969", label="losIndex
+facility_service_line
+dischargeMonth"];
+  "losIndex__medicareId_vizientServiceLine__aggregate_time_period" [shape="box", style="rounded,filled", fillcolor="#FFFFFF", color="#696969", fontcolor="#696969", label="losIndex
+facility_service_line
+aggregate_time_period"];
+  "losIndex__medicareId_dischargeStatus__dischargeMonth" [shape="box", style="rounded,filled", fillcolor="#FFFFFF", color="#696969", fontcolor="#696969", label="losIndex
+facility_discharge_status
+dischargeMonth"];
+  "losIndex__medicareId_dischargeStatus__aggregate_time_period" [shape="box", style="rounded,filled", fillcolor="#FFFFFF", color="#696969", fontcolor="#696969", label="losIndex
+facility_discharge_status
+aggregate_time_period"];
+  "losIndex__medicareId__aggregate_time_period" [shape="box", style="rounded,filled", fillcolor="#FFFFFF", color="#696969", fontcolor="#696969", label="losIndex
+facility_base
+aggregate_time_period"];
+  "losIndex__medicareId__dischargeMonth" [shape="box", style="rounded,filled", fillcolor="#FFFFFF", color="#696969", fontcolor="#696969", label="losIndex
+facility_base
+dischargeMonth"];
+  "losIndex__medicareId_vizientServiceLine__aggregate_time_period" -> "losIndex__medicareId_vizientServiceLine__dischargeMonth" [color="#565EAA", style="dashed", penwidth="1.4", fontcolor="#696969", xlabelfontcolor="#696969", xlabel="trends_to"];
+  "losIndex__medicareId_dischargeStatus__aggregate_time_period" -> "losIndex__medicareId_dischargeStatus__dischargeMonth" [color="#565EAA", style="dashed", penwidth="1.4", fontcolor="#696969", xlabelfontcolor="#696969", xlabel="trends_to"];
+  "losIndex__medicareId__aggregate_time_period" -> "losIndex__medicareId__dischargeMonth" [color="#565EAA", style="dashed", penwidth="1.4", fontcolor="#696969", xlabelfontcolor="#696969", xlabel="trends_to"];
+  "losIndex__medicareId__aggregate_time_period" -> "losIndex__medicareId_dischargeStatus__aggregate_time_period" [color="#4A5568", penwidth="1.0", fontcolor="#696969", xlabelfontcolor="#696969", xlabel="potentially_driven_by"];
+  "losIndex__medicareId__aggregate_time_period" -> "losIndex__medicareId_vizientServiceLine__aggregate_time_period" [color="#38A169", penwidth="1.6", fontcolor="#696969", xlabelfontcolor="#696969", xlabel="segments_into"];
+}

@@ -1,0 +1,87 @@
+# docker-compose.yml - Quality Compass Backend
+# Provides FastAPI + PostgreSQL (Apache AGE) + dbt development environment
+#
+# Usage:
+#   docker compose up -d           # Start all services
+#   docker compose logs -f backend # Follow backend logs
+#   docker compose down            # Stop all services
+#
+# Prerequisites:
+#   - Set RUNS_ROOT in .env to point to project-needle runs directory
+
+services:
+  # ==========================================================================
+  # Database - PostgreSQL 16 with Apache AGE (graph database extension)
+  # ==========================================================================
+  db:
+    build:
+      context: ./docker/postgres-age
+      dockerfile: Dockerfile
+    image: quality-compass-db:dev
+    container_name: ${COMPOSE_PROJECT_NAME:-qc-backend}-db
+    shm_size: ${PG_SHM_SIZE:-512mb}
+    command:
+      - "postgres"
+      - "-c"
+      - "shared_buffers=${PG_SHARED_BUFFERS:-256MB}"
+      - "-c"
+      - "work_mem=${PG_WORK_MEM:-64MB}"
+      - "-c"
+      - "maintenance_work_mem=${PG_MAINTENANCE_WORK_MEM:-128MB}"
+      - "-c"
+      - "effective_cache_size=${PG_EFFECTIVE_CACHE_SIZE:-1GB}"
+      - "-c"
+      - "max_parallel_workers_per_gather=${PG_MAX_PARALLEL_WORKERS:-2}"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-quality_compass}
+    ports:
+      - "${DB_PORT:-5433}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-quality_compass}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # ==========================================================================
+  # Backend - FastAPI with hot-reload
+  # ==========================================================================
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: quality-compass-backend:dev
+    container_name: ${COMPOSE_PROJECT_NAME:-qc-backend}-api
+    volumes:
+      - ./src:/app/src:rw
+      - ./alembic:/app/alembic:rw
+      - ./scripts:/app/scripts:ro
+      - ./dbt:/app/dbt:rw
+      - ./taxonomy:/app/taxonomy:ro
+      - ${RUNS_ROOT:?RUNS_ROOT environment variable is required}:/data/runs:ro
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-quality_compass}
+      RUNS_ROOT: /data/runs
+      CORS_ORIGINS: http://localhost:4200,http://localhost,http://quality-compass
+      DEBUG: "${DEBUG:-false}"
+      TAXONOMY_PATH: /app/taxonomy
+      DBT_POSTGRES_HOST: db
+      DBT_POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      DBT_POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      DBT_POSTGRES_PORT: "5432"
+      DBT_POSTGRES_DATABASE: ${POSTGRES_DB:-quality_compass}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    name: ${POSTGRES_VOLUME:-qc-backend-postgres-data}

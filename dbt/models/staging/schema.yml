@@ -1,0 +1,883 @@
+# Quality Compass Staging Models Schema
+# Documentation: https://docs.getdbt.com/docs/build/models
+#
+# Semantic Layer: This schema provides plain-language descriptions for all columns,
+# including business meaning, units, valid ranges, and relationships.
+
+version: 2
+
+models:
+  # ============================================
+  # Node Results Models
+  # ============================================
+
+  - name: stg_nodes
+    description: >
+      Staging model for node result metadata from Project Needle insight graph.
+      A "node" represents a specific analytical context: a metric measured at a
+      particular entity granularity (facility, service line) and time aggregation.
+      Grain: One row per node per run.
+    columns:
+      - name: canonical_node_id
+        description: >
+          Globally unique identifier for the node following the pattern:
+          '{metric_id}__{entity_dimensions}__{time_aggregation}'.
+          Example: 'losIndex__medicareId_vizientServiceLine__aggregate_time_period'.
+          Business meaning: Identifies the exact analytical context for signal generation.
+        data_tests:
+          - unique
+          - not_null
+      - name: run_id
+        description: >
+          Analysis run identifier in YYYYMMDDHHMMSS format (e.g., '20251210170210').
+          Business meaning: Links to a specific execution of the insight graph pipeline.
+          Used for filtering to latest run or comparing across runs.
+        data_tests:
+          - not_null
+      - name: dataset_path
+        description: >
+          Absolute or relative path to the source dataset used for this node analysis.
+          Business meaning: Enables data lineage tracing back to source files.
+      - name: child_count
+        description: >
+          Count of outgoing edges with direction='child'.
+          Business meaning: Indicates how many drill-down levels exist below this node.
+          Unit: Integer count. Range: 0 to ~100.
+      - name: parent_count
+        description: >
+          Count of outgoing edges with direction='parent'.
+          Business meaning: Indicates aggregation levels above this node.
+          Unit: Integer count. Range: 0 to ~10.
+      - name: entity_results_path
+        description: >
+          Relative path to the JSONL file containing entity-level results for this node.
+          Example: 'results/entities/losIndex__medicareId.jsonl'.
+          Business meaning: References the separate entity data file to avoid embedding
+          massive JSON arrays in the node file (performance optimization).
+      - name: entity_results_count
+        description: >
+          Number of entity results for this node.
+          Business meaning: Indicates the volume of facility/entity combinations analyzed.
+          Unit: Integer count. Range: 0 to ~500,000.
+      - name: raw_json
+        description: >
+          Node metadata JSON stored as JSONB for complex queries.
+          Business meaning: Contains node structure (edges, statistical methods) without
+          entity_results, which are now stored separately in raw_entity_results.
+          Contains: statistics, anomalies, edges, metadata (entity_results is empty array).
+      - name: file_path
+        description: >
+          Original JSON file path from the insight graph output directory.
+          Business meaning: Enables re-processing or debugging from source files.
+      - name: loaded_at
+        description: >
+          Timestamp when this record was loaded into the raw table.
+          Unit: UTC timestamp. Used for incremental loading and data freshness checks.
+      - name: dbt_updated_at
+        description: >
+          Timestamp when this dbt model was last refreshed.
+          Unit: UTC timestamp. Used for auditing transformation freshness.
+
+  - name: stg_node_edges
+    description: >
+      Staging model for node graph edges representing hierarchical relationships.
+      Edges define the navigation structure: drill-down (parent→child),
+      roll-up (child→parent), temporal trends, and cross-references.
+      Grain: One row per directed edge.
+    columns:
+      - name: edge_id
+        description: >
+          Surrogate key for the edge (hash of canonical_node_id + related_node_id + direction).
+          Business meaning: Uniquely identifies each graph edge for joins and deduplication.
+        data_tests:
+          - unique
+          - not_null
+      - name: canonical_node_id
+        description: >
+          Source node of the edge.
+          Relationship: Foreign key to stg_nodes.canonical_node_id.
+        data_tests:
+          - not_null
+      - name: related_node_id
+        description: >
+          Target node of the edge.
+          Relationship: References stg_nodes.canonical_node_id (may reference nodes not yet loaded).
+        data_tests:
+          - not_null
+      - name: edge_type
+        description: >
+          Semantic type of the relationship between nodes:
+          - drills_to: Parent aggregates to child detail (e.g., facility→service line)
+          - trends_to: Aggregate to temporal breakdown (e.g., yearly→monthly)
+          - segments_into: Segmentation into discrete parts (e.g., by discharge status)
+          - relates_to: Cross-dimensional reference (e.g., efficiency↔safety)
+          - explains: Analytical relationship providing context for another signal
+          - supports: Evidence relationship reinforcing another signal
+          - contradicts: Conflict relationship indicating opposing information
+          - aggregates_from: Roll-up from multiple source signals
+          - derives_to: Calculated metric derivation
+          - decomposes_to: Breakdown into constituent factors
+          - potentially_driven_by: Cross-dimensional hypothesis for driver discovery (e.g., LOS by discharge status)
+          Business meaning: Determines navigation behavior in the UI.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['drills_to', 'trends_to', 'segments_into', 'relates_to', 'explains', 'supports', 'contradicts', 'aggregates_from', 'derives_to', 'decomposes_to', 'potentially_driven_by']
+      - name: edge_direction
+        description: >
+          Direction of the edge from the source node's perspective:
+          - child: Edge points to a more granular (drill-down) node
+          - parent: Edge points to a more aggregated (roll-up) node
+          Business meaning: Determines drill-down vs roll-up navigation.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['child', 'parent']
+      - name: loaded_at
+        description: "Timestamp when source data was loaded. Unit: UTC timestamp."
+      - name: dbt_updated_at
+        description: "Timestamp when this dbt model was last refreshed. Unit: UTC timestamp."
+
+  - name: stg_entity_results
+    description: >
+      Staging model for entity-level results within nodes.
+      An "entity" represents a specific healthcare organization unit:
+      facility, service line, or sub-service line combination.
+      Grain: One row per entity per node.
+    columns:
+      - name: entity_result_id
+        description: >
+          Surrogate key for the entity result.
+          Business meaning: Uniquely identifies each entity's results within a node.
+          Relationship: Parent key for stg_statistical_methods.
+        data_tests:
+          - unique
+          - not_null
+      - name: canonical_node_id
+        description: >
+          Parent node containing this entity.
+          Relationship: Foreign key to stg_nodes.canonical_node_id.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_nodes')
+              field: canonical_node_id
+              severity: warn
+      - name: run_id
+        description: >
+          Analysis run identifier. Denormalized for efficient filtering.
+          Format: YYYYMMDDHHMMSS.
+        data_tests:
+          - not_null
+      - name: facility_id
+        description: >
+          Medicare Provider ID (CMS Certification Number) identifying the facility.
+          Example: 'AFP658', '010001'.
+          Business meaning: Primary organizational identifier for Sites of Care.
+          Used for: Filtering signals by facility, joining to facility master data.
+      - name: service_line
+        description: >
+          Vizient-defined service line classification.
+          Examples: 'Cardiovascular', 'Behavioral Health', 'Orthopedics'.
+          Business meaning: Clinical specialty grouping for benchmarking.
+          Used for: Service line filtering, peer comparison.
+      - name: sub_service_line
+        description: >
+          Vizient-defined sub-service line for more granular analysis.
+          Examples: 'Heart Failure', 'Cardiac Surgery', 'Interventional Cardiology'.
+          Business meaning: Detailed clinical specialty within service line.
+      - name: encounters
+        description: >
+          Number of patient encounters (discharges) for this entity.
+          Unit: Integer count. Range: 1 to ~50,000 per entity.
+          Business meaning: Volume indicator; used for weighting and minimum thresholds.
+        data_tests:
+          - not_null
+      - name: metric_id
+        description: >
+          Primary metric identifier from the taxonomy.
+          Examples: 'losIndex', 'readmissionRate', 'mortalityRate', 'directCostPerCase'.
+          Business meaning: The clinical/operational KPI being measured.
+          Relationship: Foreign key concept to taxonomy metric definitions.
+      - name: metric_value
+        description: >
+          Observed value for this entity's primary metric.
+          Unit: Metric-dependent (index ratio, percentage, currency, days).
+          Business meaning: The actual performance measurement being analyzed.
+      - name: entity_fields
+        description: >
+          Full entity identification as JSONB array.
+          Format: [{"id": "medicareId", "value": "AFP658"}, {"id": "vizientServiceLine", ...}]
+          Business meaning: Preserves complete entity context for complex queries.
+      - name: loaded_at
+        description: "Timestamp when source data was loaded. Unit: UTC timestamp."
+      - name: dbt_updated_at
+        description: "Timestamp when this dbt model was last refreshed. Unit: UTC timestamp."
+
+  - name: stg_statistical_methods
+    description: >
+      Staging model for statistical method results per entity.
+      Contains z-scores, percentile ranks, and peer cohort statistics used for
+      anomaly detection and severity classification.
+      Grain: One row per statistical method per entity.
+    columns:
+      - name: statistical_method_id
+        description: >
+          Surrogate key for the statistical method result.
+          Business meaning: Uniquely identifies each statistical analysis.
+          Relationship: Parent key for stg_anomalies.
+        data_tests:
+          - unique
+          - not_null
+      - name: entity_result_id
+        description: >
+          Parent entity containing this statistical analysis.
+          Relationship: Foreign key to stg_entity_results.entity_result_id.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_entity_results')
+              field: entity_result_id
+              severity: warn
+      - name: statistical_method
+        description: >
+          Full statistical method identifier.
+          Example: 'simple_zscore__peer_vizientServiceLine__encounters_weighted'.
+          Business meaning: Specifies the peer group definition and weighting scheme.
+      - name: simple_zscore
+        description: >
+          Standard z-score: (value - peer_mean) / peer_std.
+          Unit: Standard deviations from mean. Range: typically -4 to +4.
+          Business meaning: Statistical distance from peer average.
+          |z| > 2 indicates potential anomaly; |z| > 3 is severe.
+        data_tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: -10
+              max_value: 10
+              severity: warn
+              row_condition: "simple_zscore is not null"
+      - name: robust_zscore
+        description: >
+          Robust z-score using Median Absolute Deviation (MAD) scaling.
+          Unit: MAD-scaled deviations. Range: typically -4 to +4.
+          Business meaning: Outlier-resistant measure; preferred for skewed distributions.
+        data_tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: -10
+              max_value: 10
+              severity: warn
+              row_condition: "robust_zscore is not null"
+      - name: percentile_rank
+        description: >
+          Position within peer distribution.
+          Unit: Percentage (0.0 to 100.0).
+          Business meaning: "Better than X% of peers". 50 = median.
+          Interpretation depends on metric direction (lower vs higher is better).
+        data_tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 100
+              severity: error
+              row_condition: "percentile_rank is not null"
+      - name: peer_mean
+        description: >
+          Mean value of the peer comparison group.
+          Unit: Same as metric (index, percentage, currency, days).
+          Business meaning: Benchmark value representing typical peer performance.
+      - name: peer_std
+        description: >
+          Standard deviation of the peer comparison group.
+          Unit: Same as metric.
+          Business meaning: Measures variability within peer group; used for z-score calculation.
+      - name: peer_count
+        description: >
+          Number of entities in the peer comparison group.
+          Unit: Integer count. Range: 0 to ~500. Zero indicates no peers available.
+          Business meaning: Statistical power indicator. Low counts (<10) may be suppressed.
+        data_tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              severity: error
+              row_condition: "peer_count is not null"
+      - name: peer_median
+        description: >
+          Median value of the peer comparison group.
+          Unit: Same as metric.
+          Business meaning: Central tendency measure resistant to outliers.
+      - name: peer_mad
+        description: >
+          Median Absolute Deviation of the peer group.
+          Unit: Same as metric.
+          Business meaning: Robust dispersion measure; used for robust z-score.
+      - name: suppressed
+        description: >
+          Boolean flag indicating if results were suppressed due to data quality.
+          Reasons: peer_count < minimum threshold, missing data, calculation errors.
+          Business meaning: Suppressed results should not generate signals.
+      - name: percentile_trends
+        description: >
+          Peer distribution percentile trends (p10, p25, p50, p75, p90) at each time period.
+          JSONB containing: periods (chronologically sorted time periods), percentile arrays
+          (p10, p25, p50, p75, p90), sample_sizes (peer count per period), and suppression_applied
+          (boolean array indicating if period was suppressed due to low peer count).
+          Business meaning: Shows how the peer distribution envelope evolves over time.
+          Used for: Percentile band charts in temporal signal detail views.
+          Only present for temporal statistical methods (trending_simple_zscore, etc.).
+      - name: loaded_at
+        description: "Timestamp when source data was loaded. Unit: UTC timestamp."
+      - name: dbt_updated_at
+        description: "Timestamp when this dbt model was last refreshed. Unit: UTC timestamp."
+
+  - name: stg_percentile_trends
+    description: >
+      Staging model for peer distribution percentile trends at the temporal node level.
+      Contains p10, p25, p50, p75, p90 percentile arrays for each time period.
+    columns:
+      - name: percentile_trends_id
+        description: Surrogate key for percentile trends record
+        data_tests:
+          - unique
+          - not_null
+      - name: canonical_node_id
+        description: Reference to source temporal node
+        data_tests:
+          - not_null
+      - name: run_id
+        description: Insight graph run identifier
+        data_tests:
+          - not_null
+      - name: loaded_at
+        description: "Timestamp when source data was loaded. Unit: UTC timestamp."
+      - name: statistical_method_full
+        description: >
+          Full statistical method identifier (e.g., 'trending_simple_zscore__peer_vizientServiceLine').
+          Business meaning: Identifies which trending method produced these percentile trends.
+      - name: percentile_trends
+        description: >
+          JSONB containing: periods (array), p10/p25/p50/p75/p90 (arrays of floats),
+          sample_sizes (array of ints), suppression_applied (dict of bool arrays)
+
+  - name: stg_anomalies
+    description: >
+      Staging model for anomaly classification results.
+      Maps statistical measures to 8-tier severity classifications using
+      configurable threshold profiles. Each classification includes a
+      human-readable interpretation for clinical staff.
+      Grain: One row per anomaly classification per statistical method.
+    columns:
+      - name: anomaly_id
+        description: >
+          Surrogate key for the anomaly record.
+          Business meaning: Uniquely identifies each anomaly classification.
+        data_tests:
+          - unique
+          - not_null
+      - name: statistical_method_id
+        description: >
+          Parent statistical method that produced this anomaly.
+          Relationship: Foreign key to stg_statistical_methods.statistical_method_id.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_statistical_methods')
+              field: statistical_method_id
+              severity: warn
+      - name: anomaly_classification
+        description: >
+          Anomaly severity classification from the Insight Graph runtime (9-tier system):
+          - extremely_low/extremely_high: Extreme outliers, requires immediate attention
+          - very_low/very_high: High priority outliers
+          - moderately_low/moderately_high: Moderate concern
+          - slightly_low/slightly_high: Minor deviation, watchlist
+          - normal: Within expected range, no action needed
+          - no_score: Unable to compute (suppressed, missing data, etc.)
+          Business meaning: Determines signal severity and prioritization.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['extremely_low', 'very_low', 'moderately_low', 'slightly_low', 'normal', 'slightly_high', 'moderately_high', 'very_high', 'extremely_high', 'no_score']
+      - name: anomaly_profile
+        description: >
+          Name of the anomaly detection profile used.
+          Example: 'default_clinical', 'strict_safety', 'lenient_efficiency'.
+          Business meaning: Determines which threshold boundaries apply.
+      - name: anomaly_method
+        description: >
+          Specific detection method within the profile.
+          Example: 'simple_zscore_thresholds', 'robust_zscore_thresholds'.
+          Business meaning: Determines which statistic is evaluated.
+      - name: applies_to
+        description: >
+          Which statistic triggered this classification.
+          Examples: 'simple_zscore', 'robust_zscore', 'percentile_rank'.
+          Business meaning: Links classification to specific statistical measure.
+      - name: statistic_value
+        description: >
+          The actual statistic value that triggered this classification.
+          Unit: Depends on applies_to (z-score units or percentile).
+          Business meaning: Evidence for the classification decision.
+      - name: interpretation_rendered
+        description: >
+          Human-readable interpretation for clinical staff.
+          Example: "LOS Index is significantly higher than 87% of peer facilities."
+          Business meaning: Plain-language explanation for non-technical users.
+      - name: loaded_at
+        description: "Timestamp when source data was loaded. Unit: UTC timestamp."
+      - name: dbt_updated_at
+        description: "Timestamp when this dbt model was last refreshed. Unit: UTC timestamp."
+
+  # ============================================
+  # Contribution Models
+  # ============================================
+
+  - name: stg_contributions
+    description: >
+      Staging model for contribution records showing how child entities
+      contribute to parent aggregate metric values. Used for "Contribution Analysis"
+      in the UI to explain why an aggregate metric deviates from benchmark.
+      Grain: One row per parent-child entity pair per metric per run.
+    columns:
+      - name: contribution_id
+        description: >
+          Surrogate primary key (hash of run_id + nodes + entities + metric).
+          Business meaning: Uniquely identifies each contribution relationship.
+        data_tests:
+          - unique
+          - not_null
+      - name: run_id
+        description: >
+          Analysis run identifier. Format: YYYYMMDDHHMMSS.
+          Business meaning: Links to pipeline execution for versioning.
+        data_tests:
+          - not_null
+      - name: record_timestamp
+        description: >
+          Original timestamp from contribution calculation.
+          Unit: UTC timestamp.
+          Business meaning: When this contribution was computed.
+      - name: parent_node_id
+        description: >
+          Canonical node ID of the parent (aggregate) node.
+          Relationship: References stg_nodes.canonical_node_id.
+          Business meaning: The aggregate being decomposed.
+        data_tests:
+          - not_null
+      - name: child_node_id
+        description: >
+          Canonical node ID of the child (detail) node.
+          Relationship: References stg_nodes.canonical_node_id.
+          Business meaning: The component contributing to the aggregate.
+        data_tests:
+          - not_null
+      - name: parent_facility_id
+        description: >
+          Medicare Provider ID of the parent entity.
+          Business meaning: Facility whose aggregate is being decomposed.
+      - name: parent_service_line
+        description: >
+          Service line of the parent entity.
+          Business meaning: Service line context for the aggregate.
+      - name: child_facility_id
+        description: >
+          Medicare Provider ID of the child entity.
+          Business meaning: Facility of the contributing component.
+      - name: child_service_line
+        description: >
+          Service line of the child entity.
+          Business meaning: Service line of the contributing component.
+      - name: child_sub_service_line
+        description: >
+          Sub-service line of the child entity (most granular level).
+          Business meaning: Detailed specialty for drill-down analysis.
+      - name: child_admission_status
+        description: >
+          Admission status dimension of the child entity.
+          Values: 'Elective', 'Emergency', 'Urgent', 'Newborn', 'Trauma Center'.
+          Business meaning: Enables contribution drill-down by admission type.
+      - name: child_discharge_status
+        description: >
+          Discharge status dimension of the child entity.
+          Values: 'Home Health Care', 'Skilled Nursing Facility', 'Expired', etc.
+          Business meaning: Enables contribution drill-down by discharge destination.
+      - name: child_payer_segment
+        description: >
+          Payer segment dimension of the child entity.
+          Values: 'Medicare', 'Medicaid', 'Commercial', 'Self Pay', etc.
+          Business meaning: Enables contribution drill-down by payer mix.
+      - name: child_admission_source
+        description: >
+          Admission source dimension of the child entity.
+          Values: 'Physician Referral', 'Transfer from Hospital', 'Emergency Room', etc.
+          Business meaning: Enables contribution drill-down by patient origin.
+      - name: metric_id
+        description: >
+          Metric being decomposed.
+          Examples: 'losIndex', 'readmissionRate'.
+          Business meaning: The KPI whose contribution is being analyzed.
+        data_tests:
+          - not_null
+      - name: contribution_method
+        description: >
+          Mathematical decomposition method used.
+          Examples: 'weighted_mean', 'simple_mean', 'sum'.
+          Business meaning: Determines how child values combine to parent.
+      - name: child_value
+        description: >
+          Child entity's metric value.
+          Unit: Metric-dependent (index, percentage, currency, days).
+          Business meaning: The component's actual performance.
+      - name: parent_value
+        description: >
+          Parent entity's metric value.
+          Unit: Same as child_value.
+          Business meaning: The aggregate's actual performance.
+      - name: weight_field
+        description: >
+          Field used for weighting in aggregation.
+          Example: 'encounters'.
+          Business meaning: Volume measure driving weight calculation.
+      - name: weight_value
+        description: >
+          Absolute weight value for this child.
+          Unit: Same as weight_field (typically encounter count).
+          Business meaning: Raw volume of this component.
+      - name: weight_share
+        description: >
+          Proportion of total weight attributed to this child.
+          Unit: Decimal (0.0 to 1.0). Sum across children ≈ 1.0.
+          Business meaning: "This child represents X% of the parent's volume."
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0.0
+              max_value: 1.0
+              severity: error
+      - name: excess_over_parent
+        description: >
+          How much the child deviates from the parent value.
+          Formula: Effective contribution of (child_value - parent_value) to aggregate.
+          Unit: Same as metric.
+          Business meaning: Positive = child pulls parent UP; Negative = pulls DOWN.
+      - name: contribution_weight
+        description: >
+          Impact score combining deviation magnitude and volume.
+          Formula: |excess_over_parent| × weight_share.
+          Unit: Weighted metric units. Range: 0 to ~10.
+          Business meaning: Higher values indicate more impactful contributors.
+          Used for: Sorting contributors by impact in the UI.
+      - name: contribution_direction
+        description: >
+          Direction of contribution impact:
+          - positive: Child value > parent; pulls aggregate UP (e.g., longer LOS)
+          - negative: Child value < parent; pulls aggregate DOWN (e.g., shorter LOS)
+          - neutral: Negligible impact
+          Business meaning: Indicates whether to investigate high or low performers.
+        data_tests:
+          - accepted_values:
+              values: ['positive', 'negative', 'neutral']
+      - name: parent_entity
+        description: >
+          Full parent entity identification as JSONB.
+          Business meaning: Preserves complete entity context.
+      - name: child_entity
+        description: >
+          Full child entity identification as JSONB.
+          Business meaning: Preserves complete entity context.
+      - name: parent_statistics
+        description: >
+          Parent node statistics as JSONB (if available).
+          Business meaning: Peer comparison context for the parent.
+      - name: assumptions
+        description: >
+          JSONB array of assumptions made during calculation.
+          Business meaning: Audit trail for decomposition logic.
+      - name: fallbacks
+        description: >
+          JSONB array of fallback methods used.
+          Business meaning: Indicates data quality issues requiring fallbacks.
+      - name: missing_inputs
+        description: >
+          JSONB array of missing input data.
+          Business meaning: Documents data gaps affecting calculation.
+      - name: file_path
+        description: Original JSONL file path for lineage tracing.
+      - name: loaded_at
+        description: "Timestamp when source data was loaded. Unit: UTC timestamp."
+      - name: dbt_updated_at
+        description: "Timestamp when this dbt model was last refreshed. Unit: UTC timestamp."
+
+  # ============================================
+  # Modeling Models
+  # ============================================
+
+  - name: stg_modeling_experiments
+    description: >
+      Staging model for modeling experiment records loaded from modeling/experiments.json.
+      Contains experiment configuration, metrics, and artifact paths for downstream analytics.
+      Grain: One row per experiment per run.
+    columns:
+      - name: id
+        description: >
+          Experiment record identifier from the modeling run output.
+          Business meaning: Unique identifier for a modeling experiment.
+        data_tests:
+          - not_null
+      - name: run_id
+        description: >
+          Modeling run identifier derived from the run directory.
+          Business meaning: Links experiments to a single modeling execution.
+        data_tests:
+          - not_null
+      - name: config_path
+        description: >
+          Path to the modeling configuration file used for this experiment.
+      - name: groupby_label
+        description: >
+          Group-by label used for segmentation (e.g., facility, service_line).
+      - name: group_value
+        description: >
+          Specific group value used for segmentation (e.g., facility ID).
+      - name: estimator
+        description: >
+          Estimator/model type used (e.g., lightgbm, xgboost, ridge).
+        data_tests:
+          - not_null
+      - name: scoring
+        description: >
+          Scoring strategy used during training/tuning.
+      - name: n_iter
+        description: >
+          Number of hyperparameter search iterations used for tuning.
+      - name: random_state
+        description: >
+          Random seed used for experiment reproducibility.
+      - name: tuning_random_state
+        description: >
+          Random seed used specifically during hyperparameter tuning.
+      - name: dataset_path
+        description: >
+          Path to the training dataset used for the experiment.
+      - name: row_count
+        description: >
+          Number of rows used for training/evaluation.
+      - name: duration_seconds
+        description: >
+          Total experiment runtime in seconds.
+      - name: mae
+        description: >
+          Mean absolute error on the transformed scale.
+      - name: rmse
+        description: >
+          Root mean squared error on the transformed scale.
+      - name: r2
+        description: >
+          R-squared on the transformed scale.
+      - name: mae_original
+        description: >
+          Mean absolute error on the original scale.
+      - name: rmse_original
+        description: >
+          Root mean squared error on the original scale.
+      - name: r2_original
+        description: >
+          R-squared on the original scale.
+      - name: inverse_cap
+        description: >
+          Cap applied to inverse transform when present.
+      - name: capped_pred_count
+        description: >
+          Count of predictions capped during inverse transform.
+      - name: capped_pred_fraction
+        description: >
+          Fraction of predictions capped during inverse transform.
+      - name: metrics_path
+        description: >
+          Path to serialized metrics artifacts.
+      - name: predictions_path
+        description: >
+          Path to model predictions artifacts.
+      - name: eda_summary_path
+        description: >
+          Path to exploratory data analysis summary artifacts.
+      - name: group_summary_path
+        description: >
+          Path to per-group summary artifacts.
+      - name: feature_descriptor_path
+        description: >
+          Path to feature descriptor artifacts.
+      - name: hparam_trials_path
+        description: >
+          Path to hyperparameter trials artifacts.
+      - name: encounter_shap_path
+        description: >
+          Path to encounter-level SHAP summary CSV.
+      - name: facility_shap_path
+        description: >
+          Path to facility-level SHAP summary CSV.
+      - name: global_shap_path
+        description: >
+          Path to global SHAP summary CSV.
+      - name: transparency_path
+        description: >
+          Path to transparency report artifacts.
+      - name: raw_json
+        description: >
+          Full experiment JSON payload stored as JSONB for advanced queries.
+      - name: loaded_at
+        description: >
+          Timestamp when source data was loaded.
+
+  # ============================================
+  # Classification Models
+  # ============================================
+
+  - name: stg_classifications
+    description: >
+      Staging model for signal classification records from JSONL files.
+      Contains the 9 Signal Type classification with glass box explainability:
+      signal_type, severity, inputs, derived_indicators, reasoning, severity_calculation.
+      Also includes 3D matrix dimensional tiers for technical display.
+      Grain: One row per node-entity-metric classification per run.
+    columns:
+      - name: classification_id
+        description: >
+          Surrogate primary key (hash of run_id + node_id + entity_key JSONB + metric_id).
+          Business meaning: Uniquely identifies each classification record.
+        data_tests:
+          - unique
+          - not_null
+      - name: run_id
+        description: >
+          Analysis run identifier. Format: YYYYMMDDHHMMSS.
+          Business meaning: Links to pipeline execution for versioning.
+        data_tests:
+          - not_null
+      - name: canonical_node_id
+        description: >
+          Node identifier from the insight graph.
+          Relationship: References stg_nodes.canonical_node_id.
+          Business meaning: Links classification to specific analytical context.
+        data_tests:
+          - not_null
+      - name: entity_key
+        description: >
+          Full entity identification as JSONB object.
+          Format: {"medicareId": "AFP658", "vizientServiceLine": "Cardiology"}.
+          Business meaning: Preserves complete entity context for matching.
+      - name: metric_id
+        description: >
+          Metric identifier from the taxonomy.
+          Examples: 'losIndex', 'readmissionRate'.
+          Business meaning: Links classification to specific KPI.
+        data_tests:
+          - not_null
+      - name: signal_type
+        description: >
+          Signal type from the 9 Signal Type classification system:
+          - suspect_data: Data quality issues prevent reliable classification
+          - sustained_excellence: Best in class with consistent excellence
+          - improving_leader: Good performer getting even better
+          - baseline: Middle ground, nothing urgent
+          - emerging_risk: Currently OK but trending in wrong direction
+          - volatility_alert: Unusual spike detected, requires investigation
+          - recovering: Was/is bad but improving
+          - chronic_underperformer: Persistently poor, not getting better
+          - critical_trajectory: Bad and getting worse fast, urgent attention needed
+          Business meaning: High-level signal categorization for triage and action.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['suspect_data', 'sustained_excellence', 'improving_leader', 'baseline', 'emerging_risk', 'volatility_alert', 'recovering', 'chronic_underperformer', 'critical_trajectory']
+      - name: severity
+        description: >
+          Severity score within the signal type's range (0-100).
+          Each signal type has a defined severity range.
+          Higher values indicate higher priority for action.
+          Unit: Integer score. Range: 0 to 100.
+          Business meaning: Enables prioritized signal triage within type.
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 100
+              severity: error
+      - name: severity_range
+        description: >
+          Valid [min, max] severity range for this signal type as JSONB array.
+          Example: [60, 70] for emerging_risk.
+          Business meaning: Defines bounds for severity interpretation.
+      - name: inputs
+        description: >
+          JSONB object with 5 input values used for classification:
+          - aggregate_zscore: Current position vs peers
+          - slope_percentile: Direction vs peers (0-100, higher = worsening)
+          - acceleration: Momentum change (positive = trend speeding up)
+          - zscore_std: Pattern consistency
+          - max_abs_deviation: Spike detection
+          Business meaning: Glass box transparency for classification decisions.
+      - name: derived_indicators
+        description: >
+          JSONB object with categorical interpretations of inputs:
+          - position: Z-score category (excellent/favorable/normal/marginal/elevated/severe)
+          - trend: Direction category (rapidly_improving/improving/stable/worsening/rapidly_worsening)
+          - momentum: Acceleration category (accelerating/neutral/decelerating)
+          - consistency: Pattern stability (consistent/variable)
+          - has_spike: Whether significant spike detected
+          Business meaning: Human-readable input interpretations.
+      - name: classification_reasoning
+        description: >
+          Human-readable explanation of why this signal type was assigned.
+          Example: "Chronic underperformer: Performance is severely poor (aggregate z-score 2.45)
+          with no improvement trajectory (slope percentile 72.3)"
+          Business meaning: Glass box transparency for clinical staff.
+      - name: severity_calculation
+        description: >
+          JSONB object with full severity breakdown:
+          - base: Starting severity for the signal type
+          - refinements: Array of adjustments [{factor, adjustment, reason}]
+          - final: Final calculated severity
+          Business meaning: Full traceability of severity calculation.
+      - name: suppressed
+        description: >
+          Boolean flag indicating if classification was suppressed due to data quality.
+          Suppressed records are filtered out at staging level.
+          Business meaning: Data quality indicator.
+      - name: period_count
+        description: >
+          Number of temporal periods available for trend analysis.
+          Business meaning: Data completeness indicator for trend calculations.
+      - name: magnitude_tier
+        description: >
+          3D matrix magnitude tier (CRITICAL/SEVERE/ELEVATED/MARGINAL/EXPECTED/FAVORABLE/EXCELLENT).
+          Business meaning: Technical display of position severity.
+      - name: trajectory_tier
+        description: >
+          3D matrix trajectory tier (RAPIDLY_DETERIORATING/DETERIORATING/STABLE/IMPROVING/RAPIDLY_IMPROVING).
+          Business meaning: Technical display of trend direction.
+      - name: consistency_tier
+        description: >
+          3D matrix consistency tier (PERSISTENT/VARIABLE/TRANSIENT).
+          Business meaning: Technical display of pattern stability.
+      - name: coefficient_of_variation
+        description: >
+          Coefficient of variation of z-scores across periods.
+          Unit: Decimal ratio. Used for consistency tier calculation.
+          Business meaning: Quantitative measure of pattern variability.
+      - name: system_name
+        description: >
+          Health system name extracted from entity_key.
+          Business meaning: Multi-facility organization identifier.
+      - name: facility_id
+        description: >
+          Medicare Provider ID extracted from entity_key.
+          Business meaning: Primary facility identifier for joining.
+      - name: entity_key_hash
+        description: >
+          MD5 hash of entity_key (excluding medicareId, systemName) for efficient joining.
+          Business meaning: Enables fast lookups by entity dimensions.
+      - name: file_path
+        description: Original JSONL file path for lineage tracing.
+      - name: loaded_at
+        description: "Timestamp when source data was loaded. Unit: UTC timestamp."
+      - name: dbt_updated_at
+        description: "Timestamp when this dbt model was last refreshed. Unit: UTC timestamp."

@@ -1,0 +1,28 @@
+# MetricFlow Time Spine Configuration
+# Documentation: https://docs.getdbt.com/docs/build/metricflow-time-spine
+#
+# The time spine is a date dimension table required by MetricFlow for
+# time-based metric aggregations and cumulative metrics.
+
+version: 2
+
+models:
+  - name: metricflow_time_spine
+    description: >
+      Date dimension table for MetricFlow time-based aggregations.
+      Provides a complete date range from 2020 to 2030 for analytics.
+    config:
+      materialized: table
+    columns:
+      - name: date_day
+        description: The calendar date
+        tests:
+          - unique
+          - not_null
+
+time_spines:
+  - name: metricflow_time_spine
+    model: ref('metricflow_time_spine')
+    primary_column:
+      name: date_day
+      time_granularity: day

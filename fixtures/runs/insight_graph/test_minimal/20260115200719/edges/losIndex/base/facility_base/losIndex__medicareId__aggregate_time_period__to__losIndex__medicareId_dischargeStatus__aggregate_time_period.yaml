@@ -1,0 +1,16 @@
+# ABOUTME: Auto-generated edge definition via insight-graph scaffold.
+# ABOUTME: Relationship from losIndex__medicareId__aggregate_time_period to losIndex__medicareId_dischargeStatus__aggregate_time_period.
+schema_version: 0.1.0
+id: losIndex__medicareId__aggregate_time_period__to__losIndex__medicareId_dischargeStatus__aggregate_time_period
+source: losIndex__medicareId__aggregate_time_period
+target: losIndex__medicareId_dischargeStatus__aggregate_time_period
+type: potentially_driven_by
+direction: forward
+conditions:
+- field: medicareId
+  operator: equals
+  value: '{{medicareId}}'
+- field: dischargeStatus
+  operator: equals
+  value: '{{dischargeStatus}}'
+rationale: Explore discharge status as potential LOS driver

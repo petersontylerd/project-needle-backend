@@ -1,0 +1,65 @@
+# ABOUTME: Auto-generated node; edit the requirements template to regenerate.
+# ABOUTME: Metric losIndex (facility_discharge_status) via scaffold apply.
+schema_version: 0.1.0
+id: losIndex__medicareId_dischargeStatus__aggregate_time_period
+metric_id: losIndex
+group_by_set: facility_discharge_status
+group_bys:
+- type: medicareId
+  dataset_field: medicareId
+- type: dischargeStatus
+  dataset_field: dischargeStatus
+data_source:
+  dataset_id: inpatient_throughput_medicareid_year_discharge_status
+multi_method_contract:
+  contract_id: contract__aggregated_time_period
+  purpose: Shared contract for z-score based peer comparison at an aggregated time
+    period grain.
+  methods:
+  - id: statistical_method__simple_zscore__aggregate_time_period
+    anomaly_profile: anomaly_profiles__simple_zscore__aggregate_time_period
+    anomaly_methods:
+    - anomaly_method__simple_zscore__simple_zscore_threshold__aggregate_time_period
+    anomaly_method: anomaly_method__simple_zscore__simple_zscore_threshold__aggregate_time_period
+  - id: statistical_method__robust_zscore__aggregate_time_period
+    anomaly_profile: anomaly_profiles__robust_zscore__aggregate_time_period
+    anomaly_methods:
+    - anomaly_method__robust_zscore__robust_zscore_threshold__aggregate_time_period
+    anomaly_method: anomaly_method__robust_zscore__robust_zscore_threshold__aggregate_time_period
+time_grain: aggregate_time_period
+comparison_group: vizient_qa_amc_2025
+comparison_type: distribution
+metric_method_set: aggregated_time_period
+metric_dependencies: []
+tags:
+- los
+- throughput
+pii_flag: false
+description: Annual LOS segmented by discharge status
+facet_family_id: '`losIndex__medicareId_dischargeStatus`'
+graph_entry_point: false
+metadata_columns:
+- id: encounters
+  dataset_field: encounters
+  aggregation: sum
+- id: systemName
+  dataset_field: systemName
+  aggregation: first
+- id: facility
+  dataset_field: facility
+  aggregation: first
+- id: losOutliers
+  dataset_field: losOutliers
+  aggregation: sum
+- id: uniquePatients
+  dataset_field: uniquePatients
+  aggregation: sum
+- id: losMeanObservedDays
+  dataset_field: losMeanObservedDays
+  aggregation: sum
+- id: losMeanExpectedDays
+  dataset_field: losMeanExpectedDays
+  aggregation: sum
+- id: losVarianceDays
+  dataset_field: losVarianceDays
+  aggregation: sum

@@ -1,0 +1,18 @@
+{
+  "edge_count": 5,
+  "edges_directory": "/home/ubuntu/repos/project-needle/fixtures/runs/test_minimal/20260116085939/edges",
+  "node_count": 6,
+  "nodes_directory": "/home/ubuntu/repos/project-needle/fixtures/runs/test_minimal/20260116085939/nodes",
+  "output_directory": "/home/ubuntu/repos/project-needle/fixtures/runs/test_minimal/20260116085939",
+  "results": {
+    "include_legacy_entity_results": false,
+    "index_path": "results/index.json",
+    "nodes_directory": "results/nodes",
+    "sharded": true
+  },
+  "run_id": "20260116085939",
+  "run_label": "test_minimal",
+  "run_root_directory": "/home/ubuntu/repos/project-needle/fixtures/runs/test_minimal/20260116085939",
+  "started_at": "2026-01-16T08:59:39-06:00",
+  "taxonomy_directory": "/home/ubuntu/repos/project-needle/taxonomy"
+}

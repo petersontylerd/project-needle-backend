@@ -1,0 +1,124 @@
+# Quality Compass Seed Definitions
+# Documentation: https://docs.getdbt.com/docs/build/seeds
+#
+# Seeds are static reference data loaded from CSV files.
+# Run with: dbt seed
+
+version: 2
+
+seeds:
+  - name: ref_facilities
+    description: >
+      Facility reference data providing human-readable names and attributes
+      for healthcare facilities identified by Medicare Provider ID.
+      
+      This seed should be populated with actual facility master data
+      in production deployments. The sample data included is for
+      development and testing purposes only.
+      
+      Usage:
+        Join to dim_facilities or fct_signals on facility_id to get
+        facility names and attributes for display in the UI.
+    config:
+      column_types:
+        facility_id: varchar(20)
+        facility_name: varchar(200)
+        facility_type: varchar(100)
+        health_system: varchar(200)
+        region: varchar(50)
+        state: varchar(2)
+        bed_count: integer
+    columns:
+      - name: facility_id
+        description: >
+          Medicare Provider ID (CMS Certification Number).
+          Primary key and join key to dim_facilities.
+        data_tests:
+          - unique
+          - not_null
+      - name: facility_name
+        description: >
+          Official facility name for display in the UI.
+          Example: "Johns Hopkins Hospital", "Cleveland Clinic".
+        data_tests:
+          - not_null
+      - name: facility_type
+        description: >
+          Classification of facility type.
+          Values: Academic Medical Center, Community Hospital, 
+          Critical Access Hospital, Specialty Hospital, etc.
+      - name: health_system
+        description: >
+          Parent health system or organization.
+          Used for grouping and filtering in reports.
+      - name: region
+        description: >
+          Geographic region (Northeast, Southeast, Midwest, Southwest, West).
+          Used for regional benchmarking and filtering.
+      - name: state
+        description: >
+          Two-letter US state code.
+          Used for state-level reporting and compliance.
+        data_tests:
+          - not_null
+      - name: bed_count
+        description: >
+          Licensed bed count for the facility.
+          Unit: Integer count. Used for size classification.
+          Categories: Small (<100), Medium (100-300), Large (>300).
+
+  - name: metric_catalog
+    description: >
+      Authoritative metric catalog derived from taxonomy/metrics.yaml.
+      Contains semantic properties for all metrics used in the insight graph.
+
+      IMPORTANT: This file is auto-generated. DO NOT EDIT MANUALLY.
+      To update, run:
+        python scripts/semantic/generate_metric_catalog_seed.py \
+          --taxonomy taxonomy/metrics.yaml \
+          --out backend/dbt/seeds/metric_catalog.csv
+    config:
+      column_types:
+        metric_id: varchar(100)
+        metric_name: varchar(200)
+        description: text
+        domain: varchar(50)
+        direction_preference: varchar(50)
+        unit_type: varchar(50)
+        display_format: varchar(50)
+    columns:
+      - name: metric_id
+        description: >
+          Canonical metric identifier matching runtime and API usage.
+          Primary key for joining to fact tables.
+        data_tests:
+          - unique
+          - not_null
+      - name: metric_name
+        description: >
+          Human-readable metric name for UI display.
+          Example: "Length of Stay Index", "ICU Return Rate".
+        data_tests:
+          - not_null
+      - name: description
+        description: >
+          Detailed explanation of the metric for tooltips and help text.
+          Should provide context on what the metric measures and how to interpret it.
+        data_tests:
+          - not_null
+      - name: domain
+        description: >
+          Business domain classification (Efficiency, Safety, Utilization, Effectiveness).
+          Used for grouping and filtering in the UI.
+      - name: direction_preference
+        description: >
+          Indicates optimal direction: lower_is_better, higher_is_better, or neutral.
+          Used for anomaly interpretation and color coding.
+      - name: unit_type
+        description: >
+          Type of unit: ratio, percentage, days, count, currency.
+          Used for formatting display values.
+      - name: display_format
+        description: >
+          Python format string for rendering values.
+          Example: "{:.2f}" for two decimal places.

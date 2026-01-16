@@ -1,0 +1,90 @@
+{
+  "run_id": "20260115105115",
+  "generated_at": "2026-01-15T16:55:53.133146Z",
+  "artifacts_root": "/data/runs/insight_graph/test_minimal/20260115105115/analysis/contribution",
+  "parents": [
+    {
+      "parent_node_id": "losIndex__medicareId__aggregate_time_period",
+      "parent_node_file": "/data/runs/insight_graph/test_minimal/20260115105115/results/nodes/losIndex__medicareId__aggregate_time_period.jsonl",
+      "metrics": {
+        "losIndex": "losIndex__medicareId_vizientServiceLine__aggregate_time_period.losIndex.jsonl",
+        "robust_zscore": "losIndex__medicareId_vizientServiceLine__aggregate_time_period.robust_zscore.jsonl",
+        "simple_zscore": "losIndex__medicareId_vizientServiceLine__aggregate_time_period.simple_zscore.jsonl"
+      },
+      "metric_artifacts": [
+        {
+          "metric_id": "losIndex",
+          "artifact_path": "losIndex__medicareId_dischargeStatus__aggregate_time_period.losIndex.jsonl",
+          "row_count": 2535,
+          "output_format": "jsonl"
+        },
+        {
+          "metric_id": "robust_zscore",
+          "artifact_path": "losIndex__medicareId_dischargeStatus__aggregate_time_period.robust_zscore.jsonl",
+          "row_count": 2535,
+          "output_format": "jsonl"
+        },
+        {
+          "metric_id": "simple_zscore",
+          "artifact_path": "losIndex__medicareId_dischargeStatus__aggregate_time_period.simple_zscore.jsonl",
+          "row_count": 2535,
+          "output_format": "jsonl"
+        },
+        {
+          "metric_id": "losIndex",
+          "artifact_path": "losIndex__medicareId_vizientServiceLine__aggregate_time_period.losIndex.jsonl",
+          "row_count": 3554,
+          "output_format": "jsonl"
+        },
+        {
+          "metric_id": "robust_zscore",
+          "artifact_path": "losIndex__medicareId_vizientServiceLine__aggregate_time_period.robust_zscore.jsonl",
+          "row_count": 3554,
+          "output_format": "jsonl"
+        },
+        {
+          "metric_id": "simple_zscore",
+          "artifact_path": "losIndex__medicareId_vizientServiceLine__aggregate_time_period.simple_zscore.jsonl",
+          "row_count": 3554,
+          "output_format": "jsonl"
+        }
+      ],
+      "child_rows": 18267
+    },
+    {
+      "parent_node_id": "losIndex__medicareId__dischargeMonth",
+      "parent_node_file": "/data/runs/insight_graph/test_minimal/20260115105115/results/nodes/losIndex__medicareId__dischargeMonth.jsonl",
+      "metrics": {},
+      "metric_artifacts": [],
+      "child_rows": 0
+    },
+    {
+      "parent_node_id": "losIndex__medicareId_dischargeStatus__aggregate_time_period",
+      "parent_node_file": "/data/runs/insight_graph/test_minimal/20260115105115/results/nodes/losIndex__medicareId_dischargeStatus__aggregate_time_period.jsonl",
+      "metrics": {},
+      "metric_artifacts": [],
+      "child_rows": 0
+    },
+    {
+      "parent_node_id": "losIndex__medicareId_dischargeStatus__dischargeMonth",
+      "parent_node_file": "/data/runs/insight_graph/test_minimal/20260115105115/results/nodes/losIndex__medicareId_dischargeStatus__dischargeMonth.jsonl",
+      "metrics": {},
+      "metric_artifacts": [],
+      "child_rows": 0
+    },
+    {
+      "parent_node_id": "losIndex__medicareId_vizientServiceLine__aggregate_time_period",
+      "parent_node_file": "/data/runs/insight_graph/test_minimal/20260115105115/results/nodes/losIndex__medicareId_vizientServiceLine__aggregate_time_period.jsonl",
+      "metrics": {},
+      "metric_artifacts": [],
+      "child_rows": 0
+    },
+    {
+      "parent_node_id": "losIndex__medicareId_vizientServiceLine__dischargeMonth",
+      "parent_node_file": "/data/runs/insight_graph/test_minimal/20260115105115/results/nodes/losIndex__medicareId_vizientServiceLine__dischargeMonth.jsonl",
+      "metrics": {},
+      "metric_artifacts": [],
+      "child_rows": 0
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+# ABOUTME: Auto-generated facet family defaults via insight-graph scaffold.
+# ABOUTME: Regenerated from requirements; edit the template to make changes.
+defaults:
+  families:
+    '`losIndex__medicareId`':
+      metric_id: losIndex
+      comparison_group: vizient_qa_amc_2025
+      comparison_type: distribution
+      metric_dependencies: []
+      tags:
+      - losIndex
+      data_quality_messages: []
+    '`losIndex__medicareId_vizientServiceLine`':
+      metric_id: losIndex
+      comparison_group: vizient_qa_amc_2025
+      comparison_type: distribution
+      metric_dependencies: []
+      tags:
+      - losIndex
+      data_quality_messages: []
+    '`losIndex__medicareId_dischargeStatus`':
+      metric_id: losIndex
+      comparison_group: vizient_qa_amc_2025
+      comparison_type: distribution
+      metric_dependencies: []
+      tags:
+      - losIndex
+      data_quality_messages: []
+  nodes:
+    aggregate__aggregated_time_period:
+      metric_method_set: aggregated_time_period
+      multi_method_contract:
+        methods:
+        - id: statistical_method__simple_zscore__aggregate_time_period
+          anomaly_profile: anomaly_profiles__simple_zscore__aggregate_time_period
+          anomaly_method: anomaly_method__simple_zscore__simple_zscore_threshold__aggregate_time_period
+        - id: statistical_method__robust_zscore__aggregate_time_period
+          anomaly_profile: anomaly_profiles__robust_zscore__aggregate_time_period
+          anomaly_method: anomaly_method__robust_zscore__robust_zscore_threshold__aggregate_time_period
+      metric_id: losIndex
+      comparison_group: vizient_qa_amc_2025
+      comparison_type: distribution
+    trend__trending_time_period:
+      metric_method_set: trending_time_period
+      multi_method_contract:
+        methods:
+        - id: statistical_method__trending_simple_zscore__trending_time_period
+          anomaly_profile: anomaly_profiles__trending_simple_zscore__trending_time_period
+          anomaly_method: anomaly_method__trending_simple_zscore__simple_zscore_threshold__trending_time_period
+        - id: statistical_method__trending_robust_zscore__trending_time_period
+          anomaly_profile: anomaly_profiles__trending_robust_zscore__trending_time_period
+          anomaly_method: anomaly_method__trending_robust_zscore__robust_zscore_threshold__trending_time_period
+        - id: statistical_method__slope_percentile__trending_time_period
+          anomaly_profile: anomaly_profiles__slope_percentile__trending_time_period
+          anomaly_method: anomaly_method__slope_percentile__percentile_threshold__trending_time_period
+      metric_id: losIndex
+      comparison_group: vizient_qa_amc_2025
+      comparison_type: trend
+  edge_macros: {}

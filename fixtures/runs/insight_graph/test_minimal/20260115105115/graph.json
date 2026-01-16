@@ -1,0 +1,213 @@
+{
+  "edges": [
+    {
+      "conditions": [
+        {
+          "field": "medicareId",
+          "operator": "equals",
+          "value": "{{medicareId}}"
+        }
+      ],
+      "direction": "forward",
+      "id": "losIndex__medicareId__aggregate_time_period__to__losIndex__medicareId__dischargeMonth",
+      "rationale": "Annual to monthly LOS trend comparison",
+      "source": "losIndex__medicareId__aggregate_time_period",
+      "target": "losIndex__medicareId__dischargeMonth",
+      "type": "trends_to"
+    },
+    {
+      "conditions": [
+        {
+          "field": "medicareId",
+          "operator": "equals",
+          "value": "{{medicareId}}"
+        },
+        {
+          "field": "dischargeStatus",
+          "operator": "equals",
+          "value": "{{dischargeStatus}}"
+        }
+      ],
+      "direction": "forward",
+      "id": "losIndex__medicareId__aggregate_time_period__to__losIndex__medicareId_dischargeStatus__aggregate_time_period",
+      "rationale": "Drill into discharge status peers",
+      "source": "losIndex__medicareId__aggregate_time_period",
+      "target": "losIndex__medicareId_dischargeStatus__aggregate_time_period",
+      "type": "segments_into"
+    },
+    {
+      "conditions": [
+        {
+          "field": "medicareId",
+          "operator": "equals",
+          "value": "{{medicareId}}"
+        },
+        {
+          "field": "vizientServiceLine",
+          "operator": "equals",
+          "value": "{{vizientServiceLine}}"
+        }
+      ],
+      "direction": "forward",
+      "id": "losIndex__medicareId__aggregate_time_period__to__losIndex__medicareId_vizientServiceLine__aggregate_time_period",
+      "rationale": "Drill into service line peers",
+      "source": "losIndex__medicareId__aggregate_time_period",
+      "target": "losIndex__medicareId_vizientServiceLine__aggregate_time_period",
+      "type": "segments_into"
+    },
+    {
+      "conditions": [
+        {
+          "field": "medicareId",
+          "operator": "equals",
+          "value": "{{medicareId}}"
+        },
+        {
+          "field": "dischargeStatus",
+          "operator": "equals",
+          "value": "{{dischargeStatus}}"
+        }
+      ],
+      "direction": "forward",
+      "id": "losIndex__medicareId_dischargeStatus__aggregate_time_period__to__losIndex__medicareId_dischargeStatus__dischargeMonth",
+      "rationale": "Annual to monthly trend for discharge status facets",
+      "source": "losIndex__medicareId_dischargeStatus__aggregate_time_period",
+      "target": "losIndex__medicareId_dischargeStatus__dischargeMonth",
+      "type": "trends_to"
+    },
+    {
+      "conditions": [
+        {
+          "field": "medicareId",
+          "operator": "equals",
+          "value": "{{medicareId}}"
+        },
+        {
+          "field": "vizientServiceLine",
+          "operator": "equals",
+          "value": "{{vizientServiceLine}}"
+        }
+      ],
+      "direction": "forward",
+      "id": "losIndex__medicareId_vizientServiceLine__aggregate_time_period__to__losIndex__medicareId_vizientServiceLine__dischargeMonth",
+      "rationale": "Annual to monthly trend for service line facets",
+      "source": "losIndex__medicareId_vizientServiceLine__aggregate_time_period",
+      "target": "losIndex__medicareId_vizientServiceLine__dischargeMonth",
+      "type": "trends_to"
+    }
+  ],
+  "nodes": [
+    {
+      "description": "Facility LOS distribution against peer cohort (annual)",
+      "facet_family_id": "`losIndex__medicareId`",
+      "graph_entry_point": true,
+      "group_by_set": "facility_base",
+      "group_bys": [
+        {
+          "dataset_field": "medicareId",
+          "type": "medicareId"
+        }
+      ],
+      "id": "losIndex__medicareId__aggregate_time_period",
+      "metric_id": "losIndex",
+      "name": "losIndex__medicareId__aggregate_time_period",
+      "time_grain": "aggregate_time_period"
+    },
+    {
+      "description": "Monthly LOS trend relative to peer cohort",
+      "facet_family_id": "`losIndex__medicareId`",
+      "graph_entry_point": false,
+      "group_by_set": "facility_base",
+      "group_bys": [
+        {
+          "dataset_field": "medicareId",
+          "type": "medicareId"
+        }
+      ],
+      "id": "losIndex__medicareId__dischargeMonth",
+      "metric_id": "losIndex",
+      "name": "losIndex__medicareId__dischargeMonth",
+      "time_grain": "dischargeMonth"
+    },
+    {
+      "description": "Annual LOS segmented by discharge status",
+      "facet_family_id": "`losIndex__medicareId_dischargeStatus`",
+      "graph_entry_point": false,
+      "group_by_set": "facility_discharge_status",
+      "group_bys": [
+        {
+          "dataset_field": "medicareId",
+          "type": "medicareId"
+        },
+        {
+          "dataset_field": "dischargeStatus",
+          "type": "dischargeStatus"
+        }
+      ],
+      "id": "losIndex__medicareId_dischargeStatus__aggregate_time_period",
+      "metric_id": "losIndex",
+      "name": "losIndex__medicareId_dischargeStatus__aggregate_time_period",
+      "time_grain": "aggregate_time_period"
+    },
+    {
+      "description": "Monthly LOS trend segmented by discharge status",
+      "facet_family_id": "`losIndex__medicareId_dischargeStatus`",
+      "graph_entry_point": false,
+      "group_by_set": "facility_discharge_status",
+      "group_bys": [
+        {
+          "dataset_field": "medicareId",
+          "type": "medicareId"
+        },
+        {
+          "dataset_field": "dischargeStatus",
+          "type": "dischargeStatus"
+        }
+      ],
+      "id": "losIndex__medicareId_dischargeStatus__dischargeMonth",
+      "metric_id": "losIndex",
+      "name": "losIndex__medicareId_dischargeStatus__dischargeMonth",
+      "time_grain": "dischargeMonth"
+    },
+    {
+      "description": "Annual LOS by Vizient service line",
+      "facet_family_id": "`losIndex__medicareId_vizientServiceLine`",
+      "graph_entry_point": false,
+      "group_by_set": "facility_service_line",
+      "group_bys": [
+        {
+          "dataset_field": "medicareId",
+          "type": "medicareId"
+        },
+        {
+          "dataset_field": "vizientServiceLine",
+          "type": "vizientServiceLine"
+        }
+      ],
+      "id": "losIndex__medicareId_vizientServiceLine__aggregate_time_period",
+      "metric_id": "losIndex",
+      "name": "losIndex__medicareId_vizientServiceLine__aggregate_time_period",
+      "time_grain": "aggregate_time_period"
+    },
+    {
+      "description": "Monthly LOS trend by service line",
+      "facet_family_id": "`losIndex__medicareId_vizientServiceLine`",
+      "graph_entry_point": false,
+      "group_by_set": "facility_service_line",
+      "group_bys": [
+        {
+          "dataset_field": "medicareId",
+          "type": "medicareId"
+        },
+        {
+          "dataset_field": "vizientServiceLine",
+          "type": "vizientServiceLine"
+        }
+      ],
+      "id": "losIndex__medicareId_vizientServiceLine__dischargeMonth",
+      "metric_id": "losIndex",
+      "name": "losIndex__medicareId_vizientServiceLine__dischargeMonth",
+      "time_grain": "dischargeMonth"
+    }
+  ]
+}
