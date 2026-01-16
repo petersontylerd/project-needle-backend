@@ -1,0 +1,125 @@
+# .github/workflows/test.yml - Backend API CI
+name: Test
+
+on:
+  push:
+    branches: [main, feat/*, fix/*]
+  pull_request:
+    branches: [main]
+
+env:
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  POSTGRES_DB: quality_compass_test
+  DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/quality_compass_test
+
+jobs:
+  backend-tests:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: quality_compass_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Run database migrations
+        run: uv run alembic upgrade head
+
+      - name: Run tests
+        run: uv run pytest -v --tb=short
+
+      - name: Run type checking
+        run: uv run mypy src/
+
+  pipeline-test:
+    name: Pipeline Stages 8-14
+    runs-on: ubuntu-latest
+    needs: backend-tests
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: quality_compass_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Run database migrations
+        run: uv run alembic upgrade head
+
+      - name: Run pipeline with fixtures
+        run: |
+          ./scripts/pipeline.sh \
+            --runs-root ./fixtures/runs \
+            --insight-graph-run test_minimal/20251210154909 \
+            --database-url "$DATABASE_URL"
+
+      - name: Verify data loaded
+        run: |
+          uv run python -c "
+          import asyncio
+          from sqlalchemy.ext.asyncio import create_async_engine
+          from sqlalchemy import text
+
+          async def check():
+              engine = create_async_engine('$DATABASE_URL')
+              async with engine.connect() as conn:
+                  result = await conn.execute(text('SELECT count(*) FROM public_marts.fct_signals'))
+                  count = result.scalar()
+                  print(f'Signals loaded: {count}')
+                  assert count > 0, 'No signals loaded'
+
+          asyncio.run(check())
+          "
