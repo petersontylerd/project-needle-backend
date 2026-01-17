@@ -50,3 +50,7 @@ Thumbs.db
 
 # Serena
 .serena/
+
+# AI Assistants
+CLAUDE.md
+.claude/
